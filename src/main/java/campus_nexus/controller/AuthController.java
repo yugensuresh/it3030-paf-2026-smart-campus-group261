@@ -1,10 +1,8 @@
 package campus_nexus.controller;
 
-import campus_nexus.dto.request.LoginRequestDTO;
 import campus_nexus.dto.response.AuthResponseDTO;
 import campus_nexus.entity.User;
 import campus_nexus.repository.UserRepository;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +44,6 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         AuthResponseDTO response = AuthResponseDTO.builder()
-                .userId(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
                 .role(user.getRole().name())
@@ -74,7 +71,6 @@ public class AuthController {
         }
 
         AuthResponseDTO response = AuthResponseDTO.builder()
-                .userId(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
                 .role(user.getRole().name())
