@@ -1,0 +1,165 @@
+/* Shared notification bell (home, tickets, etc.) — uses page :root tokens: --navy2, --border, --cream, --muted */
+
+.nav-notify-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-notify-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--cream, var(--white));
+  cursor: pointer;
+}
+
+.nav-notify-btn:hover {
+  background: #1f2937;
+}
+
+.nav-notify-btn .bell {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.notify-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e85d4c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.notify-badge[hidden] {
+  display: none !important;
+}
+
+.notify-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(70vh, 420px);
+  display: flex;
+  flex-direction: column;
+  background: var(--navy2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.notify-panel[hidden] {
+  display: none !important;
+}
+
+.notify-head {
+  padding: 12px 14px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.notify-head .notify-sub {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.notify-list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  max-height: 320px;
+  /* Nested scroll: keep gutter stable inside the panel (Windows). */
+  scrollbar-gutter: stable;
+}
+
+.notify-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+}
+
+.notify-item:last-child {
+  border-bottom: none;
+}
+
+.notify-item-title {
+  font-weight: 600;
+  color: var(--cream, var(--white));
+  margin-bottom: 6px;
+}
+
+.notify-item-meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.notify-item-note {
+  color: #cbd5e1;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notify-foot {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.notify-foot button {
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--cream, var(--white));
+}
+
+.notify-foot button:hover {
+  background: #1f2937;
+}
+
+.notify-foot .notify-clear {
+  border-color: rgba(232, 93, 76, 0.45);
+  color: #f0a89a;
+}
+
+.notify-foot .notify-clear:hover {
+  background: rgba(232, 93, 76, 0.12);
+}
+
+.notify-empty {
+  padding: 16px 14px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
