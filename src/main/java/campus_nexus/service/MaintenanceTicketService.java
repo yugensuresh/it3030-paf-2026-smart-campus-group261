@@ -1,6 +1,5 @@
 package campus_nexus.service;
 
-import campus_nexus.config.MongoDocumentPreparer;
 import campus_nexus.dto.request.TicketRequestDTO;
 import campus_nexus.dto.response.TicketResponseDTO;
 import campus_nexus.entity.MaintenanceTicket;
@@ -17,8 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Service class for Maintenance Tickets.
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
  * Workflow: OPEN → IN_PROGRESS → RESOLVED → CLOSED
  */
 @Service
+@Transactional(readOnly = true)
 public class MaintenanceTicketService {
 
     private static final Logger logger = LoggerFactory.getLogger(MaintenanceTicketService.class);
@@ -43,14 +45,12 @@ public class MaintenanceTicketService {
     @Autowired
     private AuditLogService auditLogService;
 
-    @Autowired
-    private MongoDocumentPreparer mongoDocumentPreparer;
-
     /**
      * Create a new maintenance ticket with image attachments support
      * @param request Ticket request DTO
      * @return Saved ticket response DTO
      */
+    @Transactional
     public TicketResponseDTO createTicket(TicketRequestDTO request) {
         logger.info("Creating new maintenance ticket for resource ID: {}, user ID: {}", request.getResourceId(), request.getUserId());
 
@@ -78,7 +78,7 @@ public class MaintenanceTicketService {
             ticket.setImageUrls(request.getImageUrls());
         }
 
-        MaintenanceTicket savedTicket = ticketRepository.save(mongoDocumentPreparer.prepare(ticket));
+        MaintenanceTicket savedTicket = ticketRepository.save(ticket);
         logger.info("Ticket created successfully with ID: {}", savedTicket.getId());
 
         // Audit log
@@ -131,6 +131,7 @@ public class MaintenanceTicketService {
     /**
      * Assign a technician to a ticket
      */
+    @Transactional
     public TicketResponseDTO assignTechnician(Long ticketId, Long technicianId, String adminEmail) {
         logger.info("Assigning technician ID: {} to ticket ID: {}", technicianId, ticketId);
 
@@ -146,7 +147,7 @@ public class MaintenanceTicketService {
         // }
 
         ticket.setTechnician(technician);
-        MaintenanceTicket updatedTicket = ticketRepository.save(mongoDocumentPreparer.prepare(ticket));
+        MaintenanceTicket updatedTicket = ticketRepository.save(ticket);
 
         auditLogService.log("ASSIGN_TECHNICIAN", adminEmail,
                 "Technician " + technician.getEmail() + " assigned to ticket ID " + ticketId);
@@ -157,6 +158,7 @@ public class MaintenanceTicketService {
     /**
      * Update ticket status with workflow validation
      */
+    @Transactional
     public TicketResponseDTO updateTicketStatus(Long id, TicketStatus newStatus, String userEmail, String role) {
         logger.info("Updating ticket ID: {} to status: {} by: {} (role: {})", id, newStatus, userEmail, role);
 
@@ -180,7 +182,7 @@ public class MaintenanceTicketService {
             ticket.setClosedAt(LocalDateTime.now());
         }
 
-        MaintenanceTicket updatedTicket = ticketRepository.save(mongoDocumentPreparer.prepare(ticket));
+        MaintenanceTicket updatedTicket = ticketRepository.save(ticket);
 
         auditLogService.log("UPDATE_TICKET_STATUS", userEmail,
                 "Ticket ID " + id + " status changed from " + oldStatus + " to " + newStatus);
@@ -191,6 +193,7 @@ public class MaintenanceTicketService {
     /**
      * Add resolution notes to a ticket (technician action)
      */
+    @Transactional
     public TicketResponseDTO addResolutionNotes(Long id, String resolutionNotes, String technicianEmail) {
         logger.info("Adding resolution notes to ticket ID: {} by: {}", id, technicianEmail);
 
@@ -198,7 +201,7 @@ public class MaintenanceTicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + id));
 
         ticket.setResolutionNotes(resolutionNotes);
-        MaintenanceTicket updatedTicket = ticketRepository.save(mongoDocumentPreparer.prepare(ticket));
+        MaintenanceTicket updatedTicket = ticketRepository.save(ticket);
 
         auditLogService.log("ADD_RESOLUTION_NOTES", technicianEmail,
                 "Resolution notes added to ticket ID " + id);
@@ -209,6 +212,7 @@ public class MaintenanceTicketService {
     /**
      * Reject a ticket with reason (admin action)
      */
+    @Transactional
     public TicketResponseDTO rejectTicket(Long id, String rejectionReason, String adminEmail) {
         logger.info("Rejecting ticket ID: {} by admin: {}", id, adminEmail);
 
@@ -221,7 +225,7 @@ public class MaintenanceTicketService {
 
         ticket.setStatus(TicketStatus.REJECTED);
         ticket.setRejectionReason(rejectionReason);
-        MaintenanceTicket updatedTicket = ticketRepository.save(mongoDocumentPreparer.prepare(ticket));
+        MaintenanceTicket updatedTicket = ticketRepository.save(ticket);
 
         auditLogService.log("REJECT_TICKET", adminEmail,
                 "Ticket ID " + id + " rejected. Reason: " + rejectionReason);
@@ -232,6 +236,7 @@ public class MaintenanceTicketService {
     /**
      * Delete a ticket by ID
      */
+    @Transactional
     public void deleteTicket(Long id, String userEmail, String role) {
         logger.info("Deleting ticket ID: {} by: {} (role: {})", id, userEmail, role);
 

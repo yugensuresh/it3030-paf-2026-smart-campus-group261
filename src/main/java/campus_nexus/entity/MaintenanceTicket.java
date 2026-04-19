@@ -2,16 +2,16 @@ package campus_nexus.entity;
 
 import campus_nexus.enums.PriorityLevel;
 import campus_nexus.enums.TicketStatus;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -19,35 +19,49 @@ import java.util.List;
  * Supports workflow: OPEN → IN_PROGRESS → RESOLVED → CLOSED
  * Includes support for 3 image attachments and priority categorization.
  */
+@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "maintenance_tickets")
-@CompoundIndexes({
-        @CompoundIndex(name = "ticket_status_idx", def = "{'status': 1}"),
-        @CompoundIndex(name = "ticket_priority_idx", def = "{'priority': 1}"),
-        @CompoundIndex(name = "ticket_user_idx", def = "{'user.id': 1}"),
-        @CompoundIndex(name = "ticket_resource_idx", def = "{'resource.id': 1}")
+@Table(name = "maintenance_tickets", indexes = {
+        @Index(name = "idx_status", columnList = "status"),
+        @Index(name = "idx_priority", columnList = "priority"),
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_resource_id", columnList = "resource_id")
 })
 public class MaintenanceTicket {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resource_id", nullable = false)
     private Resource resource;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "technician_id")
     private User technician;  // Staff member assigned to fix the issue
 
+    @Column(nullable = false, length = 100)
     private String category;  // e.g., "ELECTRICAL", "PLUMBING", "EQUIPMENT", "FURNITURE"
 
+    @Column(nullable = false, length = 2000)
     private String description;
 
+    @Column(length = 1000)
     private String resolutionNotes;  // Notes from technician after resolving
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private PriorityLevel priority;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TicketStatus status;
 
     private String contactPhone;  // Preferred contact number
@@ -60,14 +74,18 @@ public class MaintenanceTicket {
 
     private String rejectionReason;  // If admin rejects the ticket
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     private LocalDateTime resolvedAt;  // When status changed to RESOLVED
     private LocalDateTime closedAt;    // When status changed to CLOSED
 
-    public void onCreate() {
+    @PrePersist
+    protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         if (this.status == null) {
@@ -78,7 +96,8 @@ public class MaintenanceTicket {
         }
     }
 
-    public void onUpdate() {
+    @PreUpdate
+    protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 

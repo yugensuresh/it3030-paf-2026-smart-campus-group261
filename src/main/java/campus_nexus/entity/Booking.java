@@ -1,26 +1,25 @@
 package campus_nexus.entity;
 
 import campus_nexus.enums.BookingStatus;
+import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.CompoundIndexes;
-import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+@Entity
 @Data
-@Document(collection = "bookings")
-@CompoundIndexes({
-        @CompoundIndex(name = "booking_resource_date_idx", def = "{'resource.id': 1, 'bookingDate': 1}"),
-        @CompoundIndex(name = "booking_user_idx", def = "{'user.id': 1}")
-})
+@Table(name = "bookings")
 public class Booking {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "resource_id", nullable = false)
     private Resource resource;
 
     private LocalDate bookingDate;
@@ -29,11 +28,13 @@ public class Booking {
     private String purpose;
 
     // New fields for Industry Level Workflow
+    @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
     private String rejectionReason;
 
-    public void onCreate() {
+    @PrePersist
+    protected void onCreate() {
         if (this.status == null) {
             this.status = BookingStatus.PENDING; // Default status as per workflow
         }

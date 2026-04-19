@@ -2,11 +2,24 @@ spring:
   application:
     name: it3030-paf-2026-smart-campus
 
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/campus_nexus_db}
-      auto-index-creation: true
+  # Database Configuration
+  datasource:
+    url: jdbc:mysql://localhost:3306/campus_nexus_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  # OAuth2 Configuration (Google Login)
   security:
     oauth2:
       client:
@@ -15,43 +28,43 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID:your-google-client-id.apps.googleusercontent.com}
             client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
             scope:
-              - openid
-              - profile
               - email
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+              - profile
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
             client-name: Google
         provider:
           google:
-            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
             token-uri: https://oauth2.googleapis.com/token
-            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
-            user-name-attribute: sub
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: email
 
+  # JWT Configuration
   jwt:
     secret: ${JWT_SECRET:c8f7e5d3b1a9c7e5f3d1b9a7c5e3f1d9b7a5c3e1f9d7b5a3c1e9f7d5b3a1c9e7f5}
-    expiration: 86400000
-    refresh-expiration: 604800000
+    expiration: 86400000  # 24 hours in milliseconds
+    refresh-expiration: 604800000  # 7 days
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: 8080
   error:
     include-message: always
     include-binding-errors: always
 
+# Logging Configuration
 logging:
   level:
     campus_nexus: DEBUG
     org.springframework.security: INFO
     org.springframework.web: INFO
-    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
+# JWT Configuration (alternative flat structure)
 app:
-  auth:
-    success-url: ${AUTH_SUCCESS_URL:/login-success.html}
   jwt:
-    secret: ${JWT_SECRET:c8f7e5d3b1a9c7e5f3d1b9a7c5e3f1d9b7a5c3e1f9d7b5a3c1e9f7d5b3a1c9e7f5}
+    secret: c8f7e5d3b1a9c7e5f3d1b9a7c5e3f1d9b7a5c3e1f9d7b5a3c1e9f7d5b3a1c9e7f5
     expiration-ms: 86400000
 
+# Swagger/OpenAPI Configuration
 springdoc:
   api-docs:
     path: /v3/api-docs

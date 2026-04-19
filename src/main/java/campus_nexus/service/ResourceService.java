@@ -1,6 +1,5 @@
 package campus_nexus.service;
 
-import campus_nexus.config.MongoDocumentPreparer;
 import campus_nexus.entity.Resource;
 import campus_nexus.enums.ResourceType;
 import campus_nexus.repository.ResourceRepository;
@@ -10,10 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ResourceService {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceService.class);
@@ -24,15 +25,13 @@ public class ResourceService {
     @Autowired
     private AuditLogService auditLogService;
 
-    @Autowired
-    private MongoDocumentPreparer mongoDocumentPreparer;
-
     /**
      * Create a new resource
      * @param resource Resource entity to save
      * @return Saved resource with generated ID
      * @throws RuntimeException if resource name already exists
      */
+    @Transactional
     public Resource createResource(Resource resource) {
         // Check for duplicate name
         if (resourceRepository.existsByNameIgnoreCase(resource.getName())) {
@@ -45,7 +44,7 @@ public class ResourceService {
             resource.setStatus("ACTIVE");
         }
 
-        Resource saved = resourceRepository.save(mongoDocumentPreparer.prepare(resource));
+        Resource saved = resourceRepository.save(resource);
         logger.info("Created new resource: {} (ID: {})", saved.getName(), saved.getId());
 
         // Audit log
@@ -85,6 +84,7 @@ public class ResourceService {
      * @return Updated resource
      * @throws RuntimeException if resource not found or duplicate name
      */
+    @Transactional
     public Resource updateResource(Long id, Resource updatedResource) {
         Resource existing = getResourceById(id);
 
@@ -106,7 +106,7 @@ public class ResourceService {
         existing.setHasProjector(updatedResource.getHasProjector());
         existing.setStatus(updatedResource.getStatus());
 
-        Resource saved = resourceRepository.save(mongoDocumentPreparer.prepare(existing));
+        Resource saved = resourceRepository.save(existing);
         logger.info("Updated resource ID: {} - {}", id, saved.getName());
 
         // Audit log
@@ -120,6 +120,7 @@ public class ResourceService {
      * @param id Resource ID to delete
      * @throws RuntimeException if resource not found
      */
+    @Transactional
     public void deleteResource(Long id) {
         if (!resourceRepository.existsById(id)) {
             logger.warn("Cannot delete - resource not found with ID: {}", id);
@@ -138,10 +139,11 @@ public class ResourceService {
      * @param status New status
      * @return Updated resource
      */
+    @Transactional
     public Resource updateResourceStatus(Long id, String status) {
         Resource resource = getResourceById(id);
         resource.setStatus(status);
-        Resource saved = resourceRepository.save(mongoDocumentPreparer.prepare(resource));
+        Resource saved = resourceRepository.save(resource);
         logger.info("Updated resource {} status to: {}", id, status);
 
         // Audit log

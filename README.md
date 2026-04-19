@@ -1,11 +1,13 @@
 # it3030-paf-2026-smart-campus-group261
 
-This backend has been migrated from MySQL to MongoDB.
+This backend uses MySQL in normal application runs.
 
-Set your MongoDB Atlas connection string before starting the app:
+Set your MySQL connection details before starting the app:
 
 ```powershell
-$env:MONGODB_URI="mongodb+srv://<username>:<password>@<cluster-url>/campus_nexus_db?retryWrites=true&w=majority&appName=CampusNexus"
+$env:MYSQL_URL="jdbc:mysql://localhost:3306/campus_nexus_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
+$env:MYSQL_USERNAME="root"
+$env:MYSQL_PASSWORD="your-mysql-password"
 ```
 
 Then run:
@@ -23,6 +25,6 @@ mvn spring-boot:run
 
 Notes:
 
-- The app now uses `spring-boot-starter-data-mongodb`.
-- Numeric `Long` IDs are still preserved using a MongoDB sequence collection named `database_sequences`.
-- Collections created by the app include `users`, `resources`, `bookings`, `maintenance_tickets`, `notifications`, and `audit_logs`.
+- The app now uses `spring-boot-starter-data-jpa` with MySQL.
+- Hibernate creates or updates the required tables automatically with `ddl-auto=update`.
+- Test runs use an in-memory H2 database so `mvn test` does not require your local MySQL server to be running.

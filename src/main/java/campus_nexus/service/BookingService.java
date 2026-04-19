@@ -1,6 +1,5 @@
 package campus_nexus.service;
 
-import campus_nexus.config.MongoDocumentPreparer;
 import campus_nexus.dto.request.BookingRequestDTO;
 import campus_nexus.dto.response.BookingResponseDTO;
 import campus_nexus.entity.Booking;
@@ -16,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +28,7 @@ import java.util.List;
  * Implements industry-standard workflow: PENDING -> APPROVED/REJECTED/CANCELLED
  */
 @Service
+@Transactional(readOnly = true)
 public class BookingService {
 
     private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
@@ -43,9 +44,6 @@ public class BookingService {
 
     @Autowired
     private AuditLogService auditLogService;
-
-    @Autowired
-    private MongoDocumentPreparer mongoDocumentPreparer;
 
     /**
      * Get all bookings with pagination (Admin only)
@@ -94,6 +92,7 @@ public class BookingService {
      * @param request Booking request DTO
      * @return Saved booking response DTO with PENDING status
      */
+    @Transactional
     public BookingResponseDTO createBooking(BookingRequestDTO request) {
         logger.info("Creating new booking for resource ID: {}, user ID: {}", request.getResourceId(), request.getUserId());
 
@@ -144,7 +143,7 @@ public class BookingService {
         booking.setStatus(BookingStatus.PENDING);
         booking.setRejectionReason(null);
 
-        Booking savedBooking = bookingRepository.save(mongoDocumentPreparer.prepare(booking));
+        Booking savedBooking = bookingRepository.save(booking);
         logger.info("Booking created successfully with ID: {}", savedBooking.getId());
 
         // 7. Audit Log
@@ -165,6 +164,7 @@ public class BookingService {
      * @param adminEmail Email of admin performing the action
      * @return Updated booking response DTO
      */
+    @Transactional
     public BookingResponseDTO updateBookingStatus(Long id, BookingStatus status, String reason, String adminEmail) {
         logger.info("Updating booking ID: {} to status: {} by admin: {}", id, status, adminEmail);
 
@@ -184,7 +184,7 @@ public class BookingService {
         booking.setStatus(status);
         booking.setRejectionReason(reason);
 
-        Booking updatedBooking = bookingRepository.save(mongoDocumentPreparer.prepare(booking));
+        Booking updatedBooking = bookingRepository.save(booking);
         logger.info("Booking ID: {} status updated to: {}", id, status);
 
         // Audit Log for Admin Action
@@ -202,6 +202,7 @@ public class BookingService {
      * @param id Booking ID
      * @param userEmail Email of user cancelling (for audit)
      */
+    @Transactional
     public void cancelBooking(Long id, String userEmail) {
         logger.info("Cancelling booking ID: {} by user: {}", id, userEmail);
 
@@ -217,7 +218,7 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
-        bookingRepository.save(mongoDocumentPreparer.prepare(booking));
+        bookingRepository.save(booking);
 
         // Audit Log
         auditLogService.log(

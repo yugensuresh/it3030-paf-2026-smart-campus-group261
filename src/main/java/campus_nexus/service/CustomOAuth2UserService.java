@@ -1,6 +1,5 @@
 package campus_nexus.service;
 
-import campus_nexus.config.MongoDocumentPreparer;
 import campus_nexus.entity.User;
 import campus_nexus.enums.Role;
 import campus_nexus.repository.UserRepository;
@@ -25,9 +24,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private MongoDocumentPreparer mongoDocumentPreparer;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -60,7 +56,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         newUser.setName(name);
         newUser.setRole(Role.USER);
 
-        User savedUser = userRepository.save(mongoDocumentPreparer.prepare(newUser));
+        User savedUser = userRepository.save(newUser);
         logger.info("New user created with ID: {}", savedUser.getId());
 
         return savedUser;

@@ -1,6 +1,5 @@
 package campus_nexus.service;
 
-import campus_nexus.config.MongoDocumentPreparer;
 import campus_nexus.entity.AuditLog;
 import campus_nexus.repository.AuditLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +15,6 @@ public class AuditLogService {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
-    @Autowired
-    private MongoDocumentPreparer mongoDocumentPreparer;
-
     /**
      * Records a new action in the database.
      * @param action The type of action performed
@@ -27,7 +23,7 @@ public class AuditLogService {
      */
     public void log(String action, String performedBy, String details) {
         AuditLog entry = new AuditLog(action, performedBy, details);
-        auditLogRepository.save(mongoDocumentPreparer.prepare(entry));
+        auditLogRepository.save(entry);
     }
 
     /**

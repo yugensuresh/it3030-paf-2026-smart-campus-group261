@@ -1,21 +1,22 @@
 package campus_nexus.entity;
 
 import campus_nexus.enums.Role;
+import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
+@Entity
 @Data
-@Document(collection = "users")
+@Table(name = "users")
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Indexed(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String name;
 
+    @Enumerated(EnumType.STRING)
     private Role role;
 }

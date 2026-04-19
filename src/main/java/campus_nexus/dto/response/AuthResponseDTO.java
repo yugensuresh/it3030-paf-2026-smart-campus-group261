@@ -7,7 +7,6 @@ import lombok.Data;
 @Builder
 public class AuthResponseDTO {
 
-    private Long userId;
     private String token;
     private String type;  // "Bearer"
     private String email;

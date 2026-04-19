@@ -1,21 +1,23 @@
 package campus_nexus.entity;
 
 import campus_nexus.enums.ResourceType;
+import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
+@Entity
 @Data
-@Document(collection = "resources")
+@Table(name = "resources")
 public class Resource {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Indexed(unique = true)
+    @Column(nullable = false, unique = true)
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ResourceType type;
 
     private Integer capacity;
@@ -26,13 +28,17 @@ public class Resource {
     private Boolean hasProjector;
 
     // THIS FIELD IS CRITICAL - MAKE SURE IT EXISTS
+    @Column(nullable = false)
     private String status = "ACTIVE";
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public void onCreate() {
+    @PrePersist
+    protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (status == null) status = "ACTIVE";
@@ -41,7 +47,8 @@ public class Resource {
         if (hasProjector == null) hasProjector = false;
     }
 
-    public void onUpdate() {
+    @PreUpdate
+    protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 }

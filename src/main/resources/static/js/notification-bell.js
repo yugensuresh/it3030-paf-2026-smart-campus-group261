@@ -55,7 +55,6 @@
   }
 
   let ticketEventSource = null;
-  const liveTicketStreamEnabled = false;
 
   function setNotifyBadge(el, count) {
     if (!el) return;
@@ -165,7 +164,6 @@
   }
 
   function connectTicketStream(notifyList, notifyBadge) {
-    if (!liveTicketStreamEnabled) return;
     const u = getUser();
     if (ticketEventSource) {
       ticketEventSource.close();

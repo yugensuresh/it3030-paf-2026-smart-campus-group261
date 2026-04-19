@@ -1,18 +1,17 @@
 package campus_nexus.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
+@Entity
 @Data
 @NoArgsConstructor
-@Document(collection = "audit_logs")
-@CompoundIndex(name = "audit_timestamp_idx", def = "{'timestamp': -1}")
+@Table(name = "audit_logs")
 public class AuditLog {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String action;      // e.g., "CREATED_BOOKING", "RESOLVED_TICKET"
