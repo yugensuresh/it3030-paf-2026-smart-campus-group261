@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: it3030-paf-2026-smart-campus
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/campus_nexus_db}
+      auto-index-creation: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id.apps.googleusercontent.com}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            client-name: Google
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+            user-name-attribute: sub
+
+  jwt:
+    secret: ${JWT_SECRET:c8f7e5d3b1a9c7e5f3d1b9a7c5e3f1d9b7a5c3e1f9d7b5a3c1e9f7d5b3a1c9e7f5}
+    expiration: 86400000
+    refresh-expiration: 604800000
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+logging:
+  level:
+    campus_nexus: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+
+app:
+  auth:
+    success-url: ${AUTH_SUCCESS_URL:/login-success.html}
+  jwt:
+    secret: ${JWT_SECRET:c8f7e5d3b1a9c7e5f3d1b9a7c5e3f1d9b7a5c3e1f9d7b5a3c1e9f7d5b3a1c9e7f5}
+    expiration-ms: 86400000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
