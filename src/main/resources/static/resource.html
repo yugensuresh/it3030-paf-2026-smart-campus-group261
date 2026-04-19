@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Resources | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <script>
+        (function redirectAdminsToManagePage() {
+            try {
+                const raw = localStorage.getItem("smartCampusUser");
+                if (!raw) return;
+                if (JSON.parse(raw).role === "ADMIN") {
+                    window.location.replace("/admin-show-resource.html");
+                }
+            } catch (_) {
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/resource.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/notification-bell.css">
+</head>
+<body class="with-shared-header">
+<div id="site-header-mount"></div>
+
+<main class="container">
+    <h1>Campus resources</h1>
+    <p class="resource-browse-intro">Browse spaces and equipment. Reservation categories help you find the right resource.</p>
+
+    <section class="card resource-browse-card">
+        <h2>Browse by reservation type</h2>
+        <p class="resource-browse-intro">Pick a category to list matching resources. To see all resources again, set Category to “All categories” in Advanced Search or use Clear filters.</p>
+        <div class="resource-category-buttons" role="group" aria-label="Reservation categories">
+            <button type="button" class="category-pick" data-category="STAFF_LEARNING">
+                Learning space reservation<br><span class="category-pick-sub">Staff only</span>
+            </button>
+            <button type="button" class="category-pick" data-category="STUDENT_DISCUSSION">
+                Discussion space reservation<br><span class="category-pick-sub">Students</span>
+            </button>
+            <button type="button" class="category-pick" data-category="HALL_LAB">
+                Halls &amp; labs<br><span class="category-pick-sub">Lecture hall, main hall, network lab, computer lab, etc.</span>
+            </button>
+            <button type="button" class="category-pick" data-category="PROJECTOR_EQUIPMENT">
+                Projectors &amp; equipment<br><span class="category-pick-sub">Projection &amp; similar gear</span>
+            </button>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Advanced Search & Filtering</h2>
+        <form id="filter-form" class="grid">
+            <label>Name
+                <input id="filter-name" placeholder="e.g. Main Hall">
+            </label>
+
+            <label>Category
+                <select id="filter-category">
+                    <option value="">All categories</option>
+                    <option value="STAFF_LEARNING">Learning space (staff only)</option>
+                    <option value="STUDENT_DISCUSSION">Discussion space (students)</option>
+                    <option value="HALL_LAB">Halls &amp; labs</option>
+                    <option value="PROJECTOR_EQUIPMENT">Projectors &amp; equipment</option>
+                </select>
+            </label>
+
+            <label>Type
+                <select id="filter-type">
+                    <option value="">Any</option>
+                    <option value="LECTURE_HALL">Lecture hall</option>
+                    <option value="LAB">Lab</option>
+                    <option value="MEETING_ROOM">Meeting room</option>
+                    <option value="EQUIPMENT">Equipment</option>
+                </select>
+            </label>
+
+            <label>Min Capacity
+                <input id="filter-min-capacity" type="number" min="1">
+            </label>
+
+            <label>Max Capacity
+                <input id="filter-max-capacity" type="number" min="1">
+            </label>
+
+            <label>WiFi
+                <select id="filter-wifi">
+                    <option value="">Any</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </label>
+
+            <label>AC
+                <select id="filter-ac">
+                    <option value="">Any</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </label>
+        </form>
+
+        <div class="actions">
+            <button id="apply-filters" type="button">Apply Filters</button>
+            <button id="clear-filters" type="button" class="secondary">Clear Filters</button>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Available resources</h2>
+        <p id="status-text"></p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Capacity</th>
+                    <th>WiFi</th>
+                    <th>AC</th>
+                    <th>Book</th>
+                </tr>
+                </thead>
+                <tbody id="resource-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+    window.RESOURCE_PAGE_MODE = "browse";
+
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+<script src="/js/header-loader.js"></script>
+<script src="/js/notification-bell.js"></script>
+<script src="app.js"></script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>

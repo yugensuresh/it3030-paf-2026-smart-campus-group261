@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/footer.css">
+</head>
+<body class="auth-page">
+<a href="/" class="auth-brand-bar" aria-label="Campus Nexus — Home">
+    <img class="brand-logo" src="/images/campus-nexus-logo.png" width="44" height="44" alt="" decoding="async">
+    <span class="brand-text">Campus Nexus</span>
+</a>
+<main class="auth-wrapper">
+    <section class="auth-card">
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Sign in or create an account to access Campus Nexus modules.</p>
+
+        <div class="auth-toggle">
+            <button id="signin-tab" class="auth-tab active" type="button">Sign In</button>
+            <button id="signup-tab" class="auth-tab" type="button">Sign Up</button>
+        </div>
+
+        <form id="signin-form">
+            <label>Email or username
+                <input id="signin-email" type="text" placeholder="you@smartcampus.edu or admin username" required>
+            </label>
+            <label>Password
+                <input id="signin-password" type="password" placeholder="Enter password" required>
+            </label>
+            <button type="submit" class="btn-primary full-width">Sign In</button>
+        </form>
+
+        <form id="signup-form" class="hidden">
+            <label>Full Name
+                <input id="signup-name" type="text" placeholder="Your full name" required>
+            </label>
+            <label>Email
+                <input id="signup-email" type="email" placeholder="you@smartcampus.edu" required>
+            </label>
+            <label>Password
+                <input id="signup-password" type="password" minlength="6" placeholder="Minimum 6 characters" required>
+            </label>
+            <button type="submit" class="btn-primary full-width">Create Account</button>
+        </form>
+
+        <p id="login-status" class="status-text"></p>
+        <p class="tiny-text">Your account is saved in the project database.</p>
+        <a class="inline-link" href="/">Back to Home</a>
+    </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+    const signinTab = document.getElementById("signin-tab");
+    const signupTab = document.getElementById("signup-tab");
+    const signinForm = document.getElementById("signin-form");
+    const signupForm = document.getElementById("signup-form");
+    const loginStatus = document.getElementById("login-status");
+
+    function setActiveTab(tab) {
+        const isSignIn = tab === "signin";
+        signinTab.classList.toggle("active", isSignIn);
+        signupTab.classList.toggle("active", !isSignIn);
+        signinForm.classList.toggle("hidden", !isSignIn);
+        signupForm.classList.toggle("hidden", isSignIn);
+        loginStatus.textContent = "";
+    }
+
+    signinTab.addEventListener("click", () => setActiveTab("signin"));
+    signupTab.addEventListener("click", () => setActiveTab("signup"));
+
+    signinForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        loginStatus.textContent = "Signing in...";
+        try {
+            const email = document.getElementById("signin-email").value.trim().toLowerCase();
+            const password = document.getElementById("signin-password").value;
+
+            const response = await fetch("/api/auth/signin", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email,
+                    password
+                })
+            });
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body.message || "Sign in failed");
+            }
+
+            if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
+                window.SmartCampusResourceApi.clearCredentials();
+            }
+            localStorage.setItem("smartCampusUser", JSON.stringify(body));
+            if (body.role === "ADMIN" && window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.rememberAdminCredentials === "function") {
+                window.SmartCampusResourceApi.rememberAdminCredentials();
+            }
+            loginStatus.textContent = `Welcome, ${body.fullName}. Redirecting...`;
+            setTimeout(() => {
+                const params = new URLSearchParams(window.location.search);
+                const nextParam = params.get("next");
+                if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
+                    window.location.href = nextParam;
+                    return;
+                }
+                const next = body.role === "ADMIN"
+                    ? "/admin.html"
+                    : (body.role === "TECHNICIAN" ? "/tech.html" : "/");
+                window.location.href = next;
+            }, 700);
+        } catch (error) {
+            loginStatus.textContent = error.message;
+        }
+    });
+
+    signupForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        loginStatus.textContent = "Creating account...";
+        try {
+            const response = await fetch("/api/auth/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    fullName: document.getElementById("signup-name").value.trim(),
+                    email: document.getElementById("signup-email").value.trim().toLowerCase(),
+                    password: document.getElementById("signup-password").value
+                })
+            });
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body.message || "Sign up failed");
+            }
+
+            loginStatus.textContent = "Sign up successful. Please sign in.";
+            signupForm.reset();
+            setActiveTab("signin");
+            document.getElementById("signin-email").value = body.email;
+        } catch (error) {
+            loginStatus.textContent = error.message;
+        }
+    });
+
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add resource | Admin</title>
+    <script src="/app-settings.js"></script>
+    <script>
+        window.RESOURCE_ADMIN_PAGE = "add";
+        (function enforceAdmin() {
+            try {
+                const raw = localStorage.getItem("smartCampusUser");
+                if (!raw) {
+                    window.location.replace("/login.html");
+                    return;
+                }
+                if (JSON.parse(raw).role !== "ADMIN") {
+                    window.location.replace("/resource.html");
+                }
+            } catch (_) {
+                window.location.replace("/login.html");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/admin-add-resource.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+</head>
+<body class="admin-add-resource-page">
+<div class="admin-app">
+    <aside class="admin-sidebar">
+        <p class="admin-sidebar-title">Management</p>
+        <nav class="admin-sidebar-nav" aria-label="Management modules">
+            <a href="/admin.html" class="admin-sidebar-link">Dashboard</a>
+            <a href="/admin-users.html" class="admin-sidebar-link">User management</a>
+            <details class="admin-sidebar-details">
+                <summary class="admin-sidebar-summary">Resource management</summary>
+                <div class="admin-sidebar-dropdown-panel">
+                    <a href="/admin-show-resource.html" class="admin-sidebar-sublink">Show resources</a>
+                    <a href="/admin-add-resource.html" class="admin-sidebar-sublink">Add resource</a>
+                </div>
+            </details>
+            <a href="/admin-bookings.html" class="admin-sidebar-link">Booking management</a>
+            <a href="/admin-contact.html" class="admin-sidebar-link">Contact us management</a>
+        </nav>
+    </aside>
+    <div class="admin-content">
+        <header class="admin-top-bar">
+            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Nexus — Home">
+                <img class="admin-brand-logo" src="/images/campus-nexus-logo.png" width="36" height="36" alt="" decoding="async">
+                <span class="admin-top-bar-brand">Campus Nexus — Admin</span>
+            </a>
+            <a href="/profile.html" class="admin-top-bar-link">My Profile</a>
+        </header>
+        <main class="admin-main-scroll">
+            <div class="admin-page-inner">
+    <h1>Add / update resource</h1>
+    <p class="resource-browse-intro">Create a new resource or follow a link from <strong>Show resources</strong> to edit an existing one.</p>
+
+    <section id="resource-admin-section" class="card">
+        <h2>Add / Update Resource</h2>
+        <p id="form-status" class="status-text"></p>
+        <form id="resource-form">
+            <input type="hidden" id="resource-id">
+
+            <div class="grid">
+                <label>Name
+                    <input id="name" required>
+                </label>
+
+                <label>Type
+                    <select id="type" required>
+                        <option value="LECTURE_HALL">Lecture hall</option>
+                        <option value="LAB">Lab</option>
+                        <option value="MEETING_ROOM">Meeting room</option>
+                        <option value="EQUIPMENT">Equipment</option>
+                    </select>
+                </label>
+
+                <label>Reservation category
+                    <select id="resource-category" required>
+                        <option value="STAFF_LEARNING">Learning space (staff only)</option>
+                        <option value="STUDENT_DISCUSSION">Discussion space (students)</option>
+                        <option value="HALL_LAB">Halls &amp; labs</option>
+                        <option value="PROJECTOR_EQUIPMENT">Projectors &amp; equipment</option>
+                    </select>
+                </label>
+
+                <label>Location
+                    <input id="location" required>
+                </label>
+
+                <label>Capacity
+                    <input id="capacity" type="number" min="1" required>
+                </label>
+
+                <label>WiFi
+                    <select id="hasWifi">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </label>
+
+                <label>Air conditioning
+                    <select id="hasAc">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </label>
+
+                <label>Projector
+                    <select id="hasProjector">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </label>
+
+                <label>Status
+                    <select id="status" required>
+                        <option value="ACTIVE">Active</option>
+                        <option value="OUT_OF_SERVICE">Out of service</option>
+                        <option value="MAINTENANCE">Maintenance</option>
+                    </select>
+                </label>
+
+                <label class="admin-add-resource-description">Description
+                    <textarea id="description" rows="4" maxlength="500" placeholder="Optional notes (max 500 characters)"></textarea>
+                </label>
+            </div>
+
+            <div class="actions">
+                <button type="submit">Save Resource</button>
+                <button type="button" id="cancel-edit" class="secondary">Cancel Edit</button>
+            </div>
+        </form>
+    </section>
+            </div>
+        </main>
+        <div id="site-footer"></div>
+    </div>
+</div>
+
+<script>
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+<script src="app.js"></script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>

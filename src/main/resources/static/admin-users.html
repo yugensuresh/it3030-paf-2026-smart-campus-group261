@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User management | Admin</title>
+    <script src="/app-settings.js"></script>
+    <script>
+        (function enforceAdmin() {
+            try {
+                const raw = localStorage.getItem("smartCampusUser");
+                if (!raw) {
+                    window.location.replace("/login.html");
+                    return;
+                }
+                if (JSON.parse(raw).role !== "ADMIN") {
+                    window.location.replace("/resource.html");
+                }
+            } catch (_) {
+                window.location.replace("/login.html");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/admin-users.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+</head>
+<body class="admin-users-page">
+<div class="admin-app">
+    <aside class="admin-sidebar">
+        <p class="admin-sidebar-title">Management</p>
+        <nav class="admin-sidebar-nav" aria-label="Management modules">
+            <a href="/admin.html" class="admin-sidebar-link">Dashboard</a>
+            <a href="/admin-users.html" class="admin-sidebar-link">User management</a>
+            <details class="admin-sidebar-details">
+                <summary class="admin-sidebar-summary">Resource management</summary>
+                <div class="admin-sidebar-dropdown-panel">
+                    <a href="/admin-show-resource.html" class="admin-sidebar-sublink">Show resources</a>
+                    <a href="/admin-add-resource.html" class="admin-sidebar-sublink">Add resource</a>
+                </div>
+            </details>
+            <a href="/admin-bookings.html" class="admin-sidebar-link">Booking management</a>
+            <a href="/admin-contact.html" class="admin-sidebar-link">Contact us management</a>
+        </nav>
+    </aside>
+    <div class="admin-content">
+        <header class="admin-top-bar">
+            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Nexus — Home">
+                <img class="admin-brand-logo" src="/images/campus-nexus-logo.png" width="36" height="36" alt="" decoding="async">
+                <span class="admin-top-bar-brand">Campus Nexus — Admin</span>
+            </a>
+            <a href="/profile.html" class="admin-top-bar-link">My Profile</a>
+        </header>
+        <main class="admin-main-scroll">
+            <div class="admin-page-inner">
+                <section class="hero admin-users-hero">
+                    <p class="eyebrow">USERS</p>
+                    <h1>User management</h1>
+                    <p class="subtitle">Review registered accounts, open profile details, update contact info, or remove users.</p>
+                </section>
+                <section class="card admin-users-card">
+                    <h2>Registered users</h2>
+                    <div class="admin-users-toolbar">
+                        <label>Search
+                            <input type="search" id="users-search" placeholder="Name or email" autocomplete="off">
+                        </label>
+                        <button type="button" id="users-refresh">Refresh list</button>
+                    </div>
+                    <p id="users-status"></p>
+                    <div class="table-wrap admin-users-table-wrap">
+                        <table class="admin-users-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Contact</th>
+                                <th>Registered</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                            <tr><td colspan="7" class="admin-users-table-msg">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <div id="site-footer"></div>
+    </div>
+</div>
+
+<dialog id="dialog-view" class="admin-users-dialog" aria-labelledby="dialog-view-title">
+    <h2 id="dialog-view-title">User profile</h2>
+    <dl id="dialog-view-dl"></dl>
+    <img id="dialog-view-img" class="admin-users-profile-preview" alt="" hidden>
+    <div class="admin-users-dialog-footer">
+        <button type="button" class="secondary" data-close-dialog="dialog-view">Close</button>
+    </div>
+</dialog>
+
+<dialog id="dialog-edit" class="admin-users-dialog" aria-labelledby="dialog-edit-title">
+    <h2 id="dialog-edit-title">Edit user</h2>
+    <form id="dialog-edit-form">
+        <input type="hidden" id="edit-user-id">
+        <label>First name
+            <input id="edit-first-name" autocomplete="off">
+        </label>
+        <label>Last name
+            <input id="edit-last-name" autocomplete="off">
+        </label>
+        <label>Email (read-only)
+            <input id="edit-email" class="admin-users-input-readonly" readonly tabindex="-1">
+        </label>
+        <label>Contact number
+            <input id="edit-contact" autocomplete="off">
+        </label>
+        <label>Address
+            <textarea id="edit-address"></textarea>
+        </label>
+        <label class="admin-users-checkbox-label">
+            <input type="checkbox" id="edit-clear-image">
+            <span>Clear profile image</span>
+        </label>
+        <div class="admin-users-dialog-footer">
+            <button type="button" class="secondary" data-close-dialog="dialog-edit">Cancel</button>
+            <button type="submit">Save</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    (function adminUsers() {
+        const api = window.SmartCampusResourceApi;
+        const statusEl = document.getElementById("users-status");
+        const tbody = document.getElementById("users-tbody");
+        const searchInput = document.getElementById("users-search");
+        let allRows = [];
+
+        function authHeaders() {
+            const h = {
+                Accept: "application/json",
+                ...(api && typeof api.mutationHeaders === "function" ? api.mutationHeaders() : {})
+            };
+            return h;
+        }
+
+        function jsonHeaders() {
+            return {
+                ...authHeaders(),
+                "Content-Type": "application/json"
+            };
+        }
+
+        function setStatus(message, isError) {
+            statusEl.textContent = message || "";
+            statusEl.classList.toggle("error", Boolean(isError));
+        }
+
+        function ensureAdminBasicToken() {
+            try {
+                if (api && typeof api.rememberAdminCredentials === "function") {
+                    api.rememberAdminCredentials();
+                }
+            } catch (_) {
+            }
+        }
+
+        function formatRegistered(iso) {
+            if (!iso) return "—";
+            try {
+                const d = new Date(iso);
+                if (Number.isNaN(d.getTime())) return iso;
+                return d.toLocaleString();
+            } catch (_) {
+                return iso;
+            }
+        }
+
+        function renderTable(rows) {
+            const q = (searchInput.value || "").trim().toLowerCase();
+            const filtered = !q ? rows : rows.filter((r) => {
+                const name = (r.fullName || "").toLowerCase();
+                const email = (r.email || "").toLowerCase();
+                const role = (r.role || "USER").toLowerCase();
+                return name.includes(q) || email.includes(q) || role.includes(q);
+            });
+
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="admin-users-table-msg">No users match your search.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((r) => {
+                const id = r.userId;
+                const roleLabel = r.role || "USER";
+                const isPortalAdmin = id === 0 || roleLabel === "ADMIN";
+                const esc = (s) => String(s == null ? "" : s)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+                const rowClass = isPortalAdmin ? "admin-users-row admin-users-row--portal" : "admin-users-row";
+                const roleClass = roleLabel === "ADMIN"
+                    ? "admin-users-role admin-users-role--admin"
+                    : "admin-users-role admin-users-role--user";
+                const manageBtns = isPortalAdmin
+                    ? `<button type="button" class="secondary js-view" data-id="${id}">View</button>`
+                    : `<button type="button" class="secondary js-view" data-id="${id}">View</button>
+                    <button type="button" class="secondary js-edit" data-id="${id}">Edit</button>
+                    <button type="button" class="secondary js-delete" data-id="${id}">Delete</button>`;
+                return `<tr class="${rowClass}" data-user-id="${id}">
+                <td>${id}</td>
+                <td class="cell-truncate" title="${esc(r.fullName)}">${esc(r.fullName || "—")}</td>
+                <td class="cell-truncate" title="${esc(r.email)}">${esc(r.email || "—")}</td>
+                <td><span class="${roleClass}">${esc(roleLabel)}</span></td>
+                <td class="cell-truncate" title="${esc(r.contactNumber)}">${esc(r.contactNumber || "—")}</td>
+                <td>${esc(formatRegistered(r.registeredAt))}</td>
+                <td class="admin-users-actions">
+                    ${manageBtns}
+                </td>
+            </tr>`;
+            }).join("");
+        }
+
+        async function loadUsers() {
+            ensureAdminBasicToken();
+            setStatus("Loading users…");
+            tbody.innerHTML = '<tr><td colspan="7" class="admin-users-table-msg">Loading…</td></tr>';
+
+            let res;
+            try {
+                res = await fetch("/api/admin/users", { headers: authHeaders() });
+            } catch (e) {
+                setStatus("Network error. Is the server running?", true);
+                tbody.innerHTML = "";
+                return;
+            }
+
+            if (res.status === 401) {
+                setStatus("Admin API access denied. Log out and sign in again as admin so resource credentials are stored.", true);
+                tbody.innerHTML = '<tr><td colspan="7" class="admin-users-table-msg">Unauthorized</td></tr>';
+                return;
+            }
+
+            if (!res.ok) {
+                setStatus("Could not load users (" + res.status + ").", true);
+                tbody.innerHTML = "";
+                return;
+            }
+
+            try {
+                allRows = await res.json();
+                if (!Array.isArray(allRows)) allRows = [];
+            } catch (_) {
+                allRows = [];
+            }
+
+            setStatus(allRows.length ? allRows.length + " user(s)." : "No users yet.");
+            renderTable(allRows);
+        }
+
+        const dialogView = document.getElementById("dialog-view");
+        const dialogViewDl = document.getElementById("dialog-view-dl");
+        const dialogViewImg = document.getElementById("dialog-view-img");
+
+        async function openView(userId) {
+            dialogViewDl.innerHTML = "";
+            dialogViewImg.hidden = true;
+            dialogViewImg.removeAttribute("src");
+            setStatus("");
+
+            if (String(userId) === "0") {
+                const portal = allRows.find((r) => r.userId === 0);
+                const name = portal && portal.fullName ? portal.fullName : "System Admin";
+                const email = portal && portal.email ? portal.email : "admin@gmail.com";
+                const rows = [
+                    ["User ID", "0"],
+                    ["Role", "ADMIN"],
+                    ["Full name", name],
+                    ["Email", email],
+                    ["Note", "Portal administrator from the login page (not stored in app_users)."]
+                ];
+                const esc = (s) => String(s == null ? "" : s)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+                dialogViewDl.innerHTML = rows.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("");
+                dialogView.showModal();
+                return;
+            }
+
+            let res;
+            try {
+                res = await fetch("/api/users/" + encodeURIComponent(userId), { headers: { Accept: "application/json" } });
+            } catch (e) {
+                setStatus("Network error loading profile.", true);
+                return;
+            }
+
+            if (!res.ok) {
+                setStatus("Could not load user " + userId + " (" + res.status + ").", true);
+                return;
+            }
+
+            const p = await res.json();
+            const rows = [
+                ["User ID", p.userId],
+                ["Full name", p.fullName || ((p.firstName || "") + " " + (p.lastName || "")).trim() || "—"],
+                ["First name", p.firstName || "—"],
+                ["Last name", p.lastName || "—"],
+                ["Email", p.email || "—"],
+                ["Contact", p.contactNumber || "—"],
+                ["Address", p.address || "—"]
+            ];
+            const esc = (s) => String(s == null ? "" : s)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+            dialogViewDl.innerHTML = rows.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("");
+
+            if (p.profileImageData && p.profileImageData.startsWith("data:image")) {
+                dialogViewImg.src = p.profileImageData;
+                dialogViewImg.hidden = false;
+            }
+
+            dialogView.showModal();
+        }
+
+        const dialogEdit = document.getElementById("dialog-edit");
+        const formEdit = document.getElementById("dialog-edit-form");
+
+        async function openEdit(userId) {
+            setStatus("");
+            document.getElementById("edit-clear-image").checked = false;
+
+            let res;
+            try {
+                res = await fetch("/api/users/" + encodeURIComponent(userId), { headers: { Accept: "application/json" } });
+            } catch (e) {
+                setStatus("Network error loading profile.", true);
+                return;
+            }
+
+            if (!res.ok) {
+                setStatus("Could not load user for edit (" + res.status + ").", true);
+                return;
+            }
+
+            const p = await res.json();
+            document.getElementById("edit-user-id").value = String(p.userId);
+            document.getElementById("edit-first-name").value = p.firstName || "";
+            document.getElementById("edit-last-name").value = p.lastName || "";
+            document.getElementById("edit-email").value = p.email || "";
+            document.getElementById("edit-contact").value = p.contactNumber || "";
+            document.getElementById("edit-address").value = p.address || "";
+            dialogEdit.showModal();
+        }
+
+        formEdit.addEventListener("submit", async (ev) => {
+            ev.preventDefault();
+            const userId = document.getElementById("edit-user-id").value;
+            const clearImage = document.getElementById("edit-clear-image").checked;
+            const body = {
+                firstName: document.getElementById("edit-first-name").value,
+                lastName: document.getElementById("edit-last-name").value,
+                contactNumber: document.getElementById("edit-contact").value,
+                address: document.getElementById("edit-address").value
+            };
+            if (clearImage) {
+                body.profileImageData = "";
+            }
+
+            ensureAdminBasicToken();
+            let res;
+            try {
+                res = await fetch("/api/admin/users/" + encodeURIComponent(userId), {
+                    method: "PUT",
+                    headers: jsonHeaders(),
+                    body: JSON.stringify(body)
+                });
+            } catch (e) {
+                setStatus("Network error while saving.", true);
+                return;
+            }
+
+            if (res.status === 401) {
+                setStatus("Save denied: re-login as admin.", true);
+                return;
+            }
+
+            if (!res.ok) {
+                setStatus("Could not save user (" + res.status + ").", true);
+                return;
+            }
+
+            dialogEdit.close();
+            setStatus("User updated.");
+            await loadUsers();
+        });
+
+        async function deleteUser(userId) {
+            if (!window.confirm("Delete user " + userId + "? This cannot be undone.")) return;
+
+            ensureAdminBasicToken();
+            let res;
+            try {
+                res = await fetch("/api/admin/users/" + encodeURIComponent(userId), {
+                    method: "DELETE",
+                    headers: authHeaders()
+                });
+            } catch (e) {
+                setStatus("Network error while deleting.", true);
+                return;
+            }
+
+            if (res.status === 401) {
+                setStatus("Delete denied: re-login as admin.", true);
+                return;
+            }
+
+            if (!res.ok) {
+                const msg = res.status === 404 ? "User not found." : "Could not delete (" + res.status + "). If they have related data, remove it first.";
+                setStatus(msg, true);
+                return;
+            }
+
+            setStatus("User removed.");
+            await loadUsers();
+        }
+
+        tbody.addEventListener("click", (ev) => {
+            const viewBtn = ev.target.closest(".js-view");
+            const editBtn = ev.target.closest(".js-edit");
+            const delBtn = ev.target.closest(".js-delete");
+            if (viewBtn) openView(viewBtn.getAttribute("data-id"));
+            else if (editBtn) openEdit(editBtn.getAttribute("data-id"));
+            else if (delBtn) deleteUser(delBtn.getAttribute("data-id"));
+        });
+
+        document.getElementById("users-refresh").addEventListener("click", loadUsers);
+        searchInput.addEventListener("input", () => renderTable(allRows));
+
+        document.querySelectorAll("[data-close-dialog]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-close-dialog");
+                const d = document.getElementById(id);
+                if (d && typeof d.close === "function") d.close();
+            });
+        });
+
+        ensureAdminBasicToken();
+        loadUsers();
+    })();
+
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>

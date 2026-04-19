@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tickets | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/resource.css">
+    <link rel="stylesheet" href="/css/tech.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/notification-bell.css">
+    <style>
+        /* Layout: .container from /css/resource.css */
+        .grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+        .card { background: var(--navy2); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+        .status { color: var(--muted); margin-top: 8px; }
+        .ok { color: #7dd3a2; }
+        .err { color: #ff9b9b; }
+        label { display: grid; gap: 6px; margin: 8px 0; }
+        input, select, textarea, button {
+            font: inherit;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #0f172a;
+            color: var(--cream);
+            padding: 10px 12px;
+        }
+        select {
+            cursor: pointer;
+            min-height: 42px;
+        }
+        textarea { min-height: 92px; resize: vertical; }
+        button { cursor: pointer; background: #1f2937; }
+        .row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .table-wrap { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 980px; }
+        th, td { border-bottom: 1px solid var(--border); text-align: left; padding: 10px; vertical-align: top; }
+        .actions { display: flex; gap: 8px; align-items: center; }
+        .small { font-size: 13px; color: var(--muted); }
+        input[type="file"] { padding: 8px 10px; cursor: pointer; }
+        .ticket-attach-label { display: flex; flex-direction: column; gap: 8px; }
+        .ticket-previews { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+        .ticket-previews figure { margin: 0; text-align: center; }
+        .ticket-previews img {
+            display: block;
+            width: 112px;
+            height: 112px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .ticket-previews figcaption { font-size: 11px; color: var(--muted); margin-top: 4px; max-width: 112px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        @media (max-width: 800px) { .row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body class="with-shared-header">
+<div id="site-header-mount"></div>
+
+<main class="container">
+    <div class="grid">
+        <section class="card">
+            <h1>Create Ticket</h1>
+            <p class="small">Report a maintenance issue for a resource.</p>
+            <form id="ticket-form">
+                <div class="row">
+                    <label>Resource
+                        <select id="resource-id" required>
+                            <option value="">Loading resources...</option>
+                        </select>
+                    </label>
+                    <label>Priority
+                        <select id="priority">
+                            <option value="LOW">LOW</option>
+                            <option value="MEDIUM" selected>MEDIUM</option>
+                            <option value="HIGH">HIGH</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="row">
+                    <label>Category
+                        <select id="category" required>
+                            <option value="">Select a category</option>
+                            <option value="STAFF_LEARNING">Learning space reservation — Staff only</option>
+                            <option value="STUDENT_DISCUSSION">Discussion space reservation — Students</option>
+                            <option value="HALL_LAB">Halls &amp; labs — Lecture hall, main hall, network lab, computer lab, etc.</option>
+                            <option value="PROJECTOR_EQUIPMENT">Projectors &amp; equipment</option>
+                        </select>
+                    </label>
+                    <label>Contact Phone
+                        <input id="contact-phone" placeholder="+94771234567">
+                    </label>
+                </div>
+
+                <label>Description
+                    <textarea id="description" required minlength="10" maxlength="2000" placeholder="Describe the issue in detail..."></textarea>
+                </label>
+
+                <label>Contact Email
+                    <input id="contact-email" type="email" placeholder="your@email.com">
+                </label>
+
+                <label class="ticket-attach-label">Photos from your device (optional, up to 3)
+                    <input type="file" id="ticket-files" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+                    <span class="small">JPEG, PNG, WebP, or GIF. Photos are resized and compressed so they fit database limits (up to 3 images).</span>
+                    <div id="ticket-previews" class="ticket-previews" aria-live="polite"></div>
+                </label>
+
+                <div class="actions">
+                    <button type="submit">Create Ticket</button>
+                    <button type="button" id="clear-form">Clear</button>
+                </div>
+            </form>
+            <p id="form-status" class="status"></p>
+        </section>
+
+        <section class="card">
+            <div class="actions" style="justify-content: space-between;">
+                <div>
+                    <h2 style="margin:0;">Tickets</h2>
+                    <p id="table-subtitle" class="small">My tickets</p>
+                </div>
+                <div class="actions">
+                    <button id="refresh-btn" type="button">Refresh</button>
+                    <button id="clear-closed-btn" type="button" class="secondary" hidden>Clear closed tickets</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Resource</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="ticket-tbody">
+                    <tr><td colspan="8">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p id="table-status" class="status small">Live updates: <span id="live-indicator">connecting…</span></p>
+        </section>
+    </div>
+</main>
+
+<div id="site-footer"></div>
+<script>
+    const currentUser = (() => {
+        try {
+            const raw = localStorage.getItem("smartCampusUser");
+            return raw ? JSON.parse(raw) : null;
+        } catch (_) {
+            return null;
+        }
+    })();
+
+    document.addEventListener("siteheaderloaded", function onTicketHeaderReady() {
+        const adminNav = document.getElementById("admin-nav-link");
+        if (adminNav && (!currentUser || currentUser.role !== "ADMIN")) {
+            adminNav.style.display = "none";
+        }
+        connectTicketStream();
+        setupNotifyBell();
+        loadNotificationBadge();
+    }, { once: true });
+
+    const form = document.getElementById("ticket-form");
+    const formStatus = document.getElementById("form-status");
+    const tbody = document.getElementById("ticket-tbody");
+    const tableStatus = document.getElementById("table-status");
+    const tableSubtitle = document.getElementById("table-subtitle");
+    const resourceSelect = document.getElementById("resource-id");
+    const liveIndicator = document.getElementById("live-indicator");
+    let ticketEventSource = null;
+    let ticketNotifySetupDone = false;
+
+    function notifyHeaders() {
+        const h = authHeaders();
+        if (currentUser && currentUser.userId) {
+            h["X-User-Id"] = String(currentUser.userId);
+        }
+        return h;
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return "";
+        return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+
+    /** Matches campus resource reservation groupings (ResourceReservationCategory). */
+    const TICKET_CATEGORY_LABELS = {
+        STAFF_LEARNING: "Learning space reservation — Staff only",
+        STUDENT_DISCUSSION: "Discussion space reservation — Students",
+        HALL_LAB: "Halls & labs — Lecture hall, main hall, network lab, computer lab, etc.",
+        PROJECTOR_EQUIPMENT: "Projectors & equipment"
+    };
+
+    function formatTicketCategory(value) {
+        if (value == null || String(value).trim() === "") return "—";
+        const key = String(value).trim();
+        return TICKET_CATEGORY_LABELS[key] || key;
+    }
+
+    /** Jackson may send ISO string or LocalDateTime array. */
+    function fmtDateTime(val) {
+        if (val == null) return "—";
+        if (typeof val === "string") {
+            const d = new Date(val);
+            return Number.isNaN(d.getTime()) ? val : d.toLocaleString();
+        }
+        if (Array.isArray(val) && val.length >= 5) {
+            const y = val[0];
+            const mo = val[1] - 1;
+            const d = val[2];
+            const h = val[3] || 0;
+            const mi = val[4] || 0;
+            const s = val[5] || 0;
+            return new Date(y, mo, d, h, mi, s).toLocaleString();
+        }
+        return String(val);
+    }
+
+    function setNotifyBadge(count) {
+        const el = document.getElementById("notify-badge");
+        if (!el) return;
+        const n = Math.max(0, Number(count) || 0);
+        if (n > 0) {
+            el.textContent = n > 99 ? "99+" : String(n);
+            el.hidden = false;
+        } else {
+            el.hidden = true;
+        }
+    }
+
+    function renderActivityCard(d) {
+        const id = d.ticketId != null ? d.ticketId : "—";
+        const action = d.action || "Update";
+        const note = d.note && String(d.note).trim() ? escapeHtml(d.note) : "—";
+        return `<div class="notify-item" data-live="1">
+            <div class="notify-item-title">Ticket #${escapeHtml(String(id))} · ${escapeHtml(action)}</div>
+            <div class="notify-item-meta">Created: ${escapeHtml(fmtDateTime(d.ticketCreatedAt))}<br>Update: ${escapeHtml(fmtDateTime(d.eventAt))}</div>
+            <div class="notify-item-note"><strong>Note:</strong> ${note}</div>
+        </div>`;
+    }
+
+    function prependActivityFromStream(d) {
+        const list = document.getElementById("notify-list");
+        if (!list) return;
+        if (currentUser && currentUser.role === "USER" && d.ticketOwnerUserId != null && Number(d.ticketOwnerUserId) !== Number(currentUser.userId)) {
+            return;
+        }
+        list.insertAdjacentHTML("afterbegin", renderActivityCard(d));
+        list.querySelectorAll(".notify-item").forEach((el, i) => {
+            if (i > 50) el.remove();
+        });
+    }
+
+    async function loadNotificationBadge() {
+        if (!currentUser || !currentUser.userId) return;
+        try {
+            const res = await fetch("/api/notifications/unread/count", { headers: notifyHeaders() });
+            if (!res.ok) return;
+            const data = await res.json();
+            setNotifyBadge(data.count != null ? data.count : 0);
+        } catch (_) {}
+    }
+
+    async function loadNotificationListFromApi() {
+        const list = document.getElementById("notify-list");
+        if (!list || !currentUser || !currentUser.userId) return;
+        try {
+            const res = await fetch("/api/notifications?page=0&size=25", { headers: notifyHeaders() });
+            if (!res.ok) return;
+            const body = await res.json();
+            const rows = Array.isArray(body.content) ? body.content : [];
+            const html = rows.map((n) => {
+                const title = escapeHtml(n.typeTitle || "Notification");
+                const msg = escapeHtml(n.message || "");
+                const when = fmtDateTime(n.createdAt);
+                return `<div class="notify-item">
+                    <div class="notify-item-title">${title}</div>
+                    <div class="notify-item-meta">${when}</div>
+                    <div class="notify-item-note">${msg}</div>
+                </div>`;
+            }).join("");
+            list.innerHTML = html || '<div class="notify-empty" role="status">No notifications yet.</div>';
+        } catch (_) {}
+    }
+
+    async function markAllNotificationsRead() {
+        if (!currentUser || !currentUser.userId) return;
+        try {
+            const res = await fetch("/api/notifications/read-all", {
+                method: "PATCH",
+                headers: notifyHeaders()
+            });
+            if (res.ok) await loadNotificationBadge();
+        } catch (_) {}
+    }
+
+    async function clearAllNotifications() {
+        const list = document.getElementById("notify-list");
+        if (!currentUser || !currentUser.userId || !list) return;
+        if (!window.confirm("Delete all notifications? This cannot be undone.")) return;
+        try {
+            const res = await fetch("/api/notifications", {
+                method: "DELETE",
+                headers: notifyHeaders()
+            });
+            if (res.ok) {
+                list.innerHTML = '<div class="notify-empty" role="status">No notifications yet.</div>';
+                setNotifyBadge(0);
+            }
+        } catch (_) {}
+    }
+
+    function setupNotifyBell() {
+        if (ticketNotifySetupDone) return;
+        const navNotifyWrap = document.getElementById("nav-notify-wrap");
+        const notifyBell = document.getElementById("notify-bell");
+        const notifyPanel = document.getElementById("notify-panel");
+        const notifyMarkRead = document.getElementById("notify-mark-read");
+        const notifyClearAll = document.getElementById("notify-clear-all");
+        if (!navNotifyWrap || !notifyBell || !notifyPanel) return;
+        if (!currentUser || !currentUser.userId) {
+            navNotifyWrap.style.display = "none";
+            return;
+        }
+        navNotifyWrap.style.display = "";
+
+        notifyBell.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            const open = notifyPanel.hidden;
+            notifyPanel.hidden = !open;
+            notifyBell.setAttribute("aria-expanded", open ? "true" : "false");
+            if (open) loadNotificationListFromApi();
+        });
+
+        if (notifyMarkRead) {
+            notifyMarkRead.addEventListener("click", (ev) => {
+                ev.stopPropagation();
+                markAllNotificationsRead();
+            });
+        }
+
+        if (notifyClearAll) {
+            notifyClearAll.addEventListener("click", (ev) => {
+                ev.stopPropagation();
+                clearAllNotifications();
+            });
+        }
+
+        document.addEventListener("click", () => {
+            if (notifyPanel && !notifyPanel.hidden) {
+                notifyPanel.hidden = true;
+                notifyBell.setAttribute("aria-expanded", "false");
+            }
+        });
+        notifyPanel.addEventListener("click", (ev) => ev.stopPropagation());
+        ticketNotifySetupDone = true;
+    }
+
+    function setStatus(el, msg, kind) {
+        el.textContent = msg || "";
+        el.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function authHeaders() {
+        const email = currentUser && currentUser.email ? currentUser.email : "system@campus.com";
+        const role = currentUser && currentUser.role ? currentUser.role : "USER";
+        return {
+            "Content-Type": "application/json",
+            "X-User-Email": email,
+            "X-User-Role": role
+        };
+    }
+
+    async function loadResources() {
+        resourceSelect.innerHTML = '<option value="">Loading resources...</option>';
+        try {
+            const res = await fetch("/api/resources");
+            if (!res.ok) throw new Error("Failed to load resources");
+            const data = await res.json();
+            if (!Array.isArray(data) || !data.length) {
+                resourceSelect.innerHTML = '<option value="">No resources found</option>';
+                return;
+            }
+            resourceSelect.innerHTML = '<option value="">Select a resource</option>' +
+                data.map((r) => `<option value="${r.id}">${String(r.name || "Resource #" + r.id)}</option>`).join("");
+        } catch (e) {
+            resourceSelect.innerHTML = '<option value="">Could not load resources</option>';
+        }
+    }
+
+    const ticketFilesInput = document.getElementById("ticket-files");
+    const ticketPreviewsEl = document.getElementById("ticket-previews");
+
+    function revokeTicketPreviewUrls() {
+        if (!ticketPreviewsEl) return;
+        ticketPreviewsEl.querySelectorAll("img[data-preview-url]").forEach((img) => {
+            const u = img.getAttribute("data-preview-url");
+            if (u) URL.revokeObjectURL(u);
+        });
+    }
+
+    function renderTicketFilePreviews(files) {
+        if (!ticketPreviewsEl) return;
+        revokeTicketPreviewUrls();
+        ticketPreviewsEl.innerHTML = "";
+        files.forEach((file) => {
+            const url = URL.createObjectURL(file);
+            const fig = document.createElement("figure");
+            const im = document.createElement("img");
+            im.alt = "";
+            im.src = url;
+            im.setAttribute("data-preview-url", url);
+            const cap = document.createElement("figcaption");
+            cap.textContent = file.name;
+            fig.appendChild(im);
+            fig.appendChild(cap);
+            ticketPreviewsEl.appendChild(fig);
+        });
+    }
+
+    if (ticketFilesInput && ticketPreviewsEl) {
+        ticketFilesInput.addEventListener("change", () => {
+            const picked = Array.from(ticketFilesInput.files || []);
+            const slice = picked.slice(0, 3);
+            if (picked.length > 3) {
+                const dt = new DataTransfer();
+                slice.forEach((f) => dt.items.add(f));
+                ticketFilesInput.files = dt.files;
+            }
+            renderTicketFilePreviews(slice);
+        });
+    }
+
+    /**
+     * Resize and encode as JPEG data URL so payloads fit DB and HTTP limits.
+     */
+    function fileToCompressedDataUrl(file, maxEdge, quality) {
+        return new Promise((resolve, reject) => {
+            const blobUrl = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                URL.revokeObjectURL(blobUrl);
+                let w = img.naturalWidth || img.width;
+                let h = img.naturalHeight || img.height;
+                if (!w || !h) {
+                    reject(new Error("Could not read image dimensions."));
+                    return;
+                }
+                const scale = Math.min(1, maxEdge / Math.max(w, h));
+                w = Math.max(1, Math.round(w * scale));
+                h = Math.max(1, Math.round(h * scale));
+                const canvas = document.createElement("canvas");
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) {
+                    reject(new Error("Canvas not available."));
+                    return;
+                }
+                ctx.drawImage(img, 0, 0, w, h);
+                let dataUrl;
+                try {
+                    dataUrl = canvas.toDataURL("image/jpeg", quality);
+                } catch (e) {
+                    reject(e);
+                    return;
+                }
+                resolve(dataUrl);
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(blobUrl);
+                reject(new Error("Unsupported or corrupt image file."));
+            };
+            img.src = blobUrl;
+        });
+    }
+
+    /**
+     * MySQL default max_allowed_packet is 1MB for the whole INSERT; keep each data URL small enough
+     * that three images plus other columns stay under typical limits.
+     */
+    const MAX_DATA_URL_CHARS_PER_IMAGE = 280000;
+
+    async function compressImageUnderBudget(file, maxChars) {
+        let maxEdge = 900;
+        let quality = 0.7;
+        let dataUrl = await fileToCompressedDataUrl(file, maxEdge, quality);
+        let attempts = 0;
+        while (dataUrl.length > maxChars && attempts < 14) {
+            attempts++;
+            if (quality > 0.42) {
+                quality -= 0.055;
+            } else {
+                maxEdge = Math.max(360, Math.round(maxEdge * 0.86));
+                quality = Math.min(quality, 0.62);
+            }
+            dataUrl = await fileToCompressedDataUrl(file, maxEdge, quality);
+        }
+        if (dataUrl.length > maxChars) {
+            throw new Error("Image \"" + file.name + "\" is still too large after compression. Try a smaller or simpler photo.");
+        }
+        return dataUrl;
+    }
+
+    async function buildImageUrlsFromFiles() {
+        if (!ticketFilesInput || !ticketFilesInput.files || !ticketFilesInput.files.length) {
+            return [];
+        }
+        const files = Array.from(ticketFilesInput.files).slice(0, 3);
+        const out = [];
+        for (let i = 0; i < files.length; i++) {
+            const f = files[i];
+            if (!f.type.startsWith("image/")) {
+                continue;
+            }
+            setStatus(formStatus, "Processing image " + (i + 1) + " of " + files.length + "…");
+            const dataUrl = await compressImageUnderBudget(f, MAX_DATA_URL_CHARS_PER_IMAGE);
+            out.push(dataUrl);
+        }
+        return out;
+    }
+
+    function resetTicketAttachments() {
+        if (ticketFilesInput) ticketFilesInput.value = "";
+        if (ticketPreviewsEl) {
+            revokeTicketPreviewUrls();
+            ticketPreviewsEl.innerHTML = "";
+        }
+    }
+
+    async function createTicket(ev) {
+        ev.preventDefault();
+        if (!currentUser || !currentUser.userId) {
+            setStatus(formStatus, "Please login first. Missing user session.", "err");
+            return;
+        }
+        const categoryVal = document.getElementById("category").value.trim();
+        let imageUrls = [];
+        try {
+            imageUrls = await buildImageUrlsFromFiles();
+        } catch (imgErr) {
+            setStatus(formStatus, imgErr.message || "Could not process images.", "err");
+            return;
+        }
+        const payload = {
+            userId: Number(currentUser.userId),
+            resourceId: Number(document.getElementById("resource-id").value),
+            category: categoryVal,
+            description: document.getElementById("description").value.trim(),
+            priority: document.getElementById("priority").value,
+            contactPhone: document.getElementById("contact-phone").value.trim(),
+            contactEmail: document.getElementById("contact-email").value.trim() || currentUser.email,
+            imageUrls
+        };
+        if (!payload.resourceId) {
+            setStatus(formStatus, "Please select a resource.", "err");
+            return;
+        }
+        if (!categoryVal) {
+            setStatus(formStatus, "Please select a category.", "err");
+            return;
+        }
+
+        setStatus(formStatus, "Creating ticket...");
+        try {
+            const res = await fetch("/api/tickets", {
+                method: "POST",
+                headers: authHeaders(),
+                body: JSON.stringify(payload)
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(body.message || "Could not create ticket");
+            }
+            form.reset();
+            resetTicketAttachments();
+            await loadResources();
+            setStatus(formStatus, `Ticket #${body.id} created successfully.`, "ok");
+            await loadTickets();
+        } catch (e) {
+            setStatus(formStatus, e.message || "Create failed.", "err");
+        }
+    }
+
+    function fmtDate(iso) {
+        if (!iso) return "-";
+        const d = new Date(iso);
+        return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
+    }
+
+    function canClose(ticket) {
+        return currentUser && currentUser.role === "USER" && ticket.status === "RESOLVED";
+    }
+
+    function canAdminEdit() {
+        return currentUser && currentUser.role === "ADMIN";
+    }
+
+    function renderTickets(rows) {
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="8">No tickets found.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map((t) => {
+            const actions = [];
+            if (canClose(t)) {
+                actions.push(`<button data-action="close" data-id="${t.id}" type="button">Close</button>`);
+            }
+            if (canAdminEdit()) {
+                actions.push(`<button data-action="progress" data-id="${t.id}" type="button">Set In Progress</button>`);
+                actions.push(`<button data-action="resolve" data-id="${t.id}" type="button">Set Resolved</button>`);
+                actions.push(`<button data-action="reject" data-id="${t.id}" type="button">Reject</button>`);
+                actions.push(`<button data-action="delete" data-id="${t.id}" type="button">Delete</button>`);
+            }
+            return `<tr>
+                <td>${t.id}</td>
+                <td>${t.resourceName || "-"}</td>
+                <td>${escapeHtml(formatTicketCategory(t.category))}</td>
+                <td>${t.priority || "-"}</td>
+                <td>${t.status || "-"}</td>
+                <td>${fmtDate(t.createdAt)}</td>
+                <td>${t.resolutionNotes || t.rejectionReason || "-"}</td>
+                <td class="actions">${actions.join("") || "-"}</td>
+            </tr>`;
+        }).join("");
+    }
+
+    async function loadTickets() {
+        if (!currentUser || !currentUser.userId) {
+            tbody.innerHTML = '<tr><td colspan="8">Login required.</td></tr>';
+            setStatus(tableStatus, "Please login to view tickets.", "err");
+            return;
+        }
+        setStatus(tableStatus, "Loading tickets...");
+        try {
+            let url = `/api/tickets/user/${encodeURIComponent(currentUser.userId)}?page=0&size=50`;
+            if (currentUser.role === "ADMIN") {
+                url = "/api/tickets?page=0&size=50&sort=createdAt&direction=desc";
+                tableSubtitle.textContent = "Active tickets (closed excluded)";
+            } else {
+                tableSubtitle.textContent = "My tickets";
+            }
+            const res = await fetch(url, { headers: authHeaders() });
+            if (!res.ok) throw new Error("Failed to fetch tickets");
+            const body = await res.json();
+            const rows = Array.isArray(body.content) ? body.content : [];
+            renderTickets(rows);
+            setStatus(tableStatus, `Loaded ${rows.length} ticket(s).`);
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="8">Could not load tickets.</td></tr>';
+            setStatus(tableStatus, e.message || "Load failed.", "err");
+        }
+    }
+
+    async function patchStatus(ticketId, status) {
+        const res = await fetch(`/api/tickets/${ticketId}/status`, {
+            method: "PATCH",
+            headers: authHeaders(),
+            body: JSON.stringify({ status })
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.message || `Could not set status ${status}`);
+    }
+
+    async function rejectTicket(ticketId) {
+        const reason = window.prompt("Rejection reason:");
+        if (!reason) return;
+        const res = await fetch(`/api/tickets/${ticketId}/reject`, {
+            method: "PATCH",
+            headers: authHeaders(),
+            body: JSON.stringify({ rejectionReason: reason })
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.message || "Could not reject ticket");
+    }
+
+    async function deleteTicket(ticketId) {
+        if (!window.confirm(`Delete ticket #${ticketId}?`)) return;
+        const res = await fetch(`/api/tickets/${ticketId}`, {
+            method: "DELETE",
+            headers: authHeaders()
+        });
+        if (!res.ok) throw new Error("Could not delete ticket");
+    }
+
+    tbody.addEventListener("click", async (ev) => {
+        const btn = ev.target.closest("button[data-action]");
+        if (!btn) return;
+        const id = Number(btn.dataset.id);
+        const action = btn.dataset.action;
+        try {
+            if (action === "close") await patchStatus(id, "CLOSED");
+            if (action === "progress") await patchStatus(id, "IN_PROGRESS");
+            if (action === "resolve") await patchStatus(id, "RESOLVED");
+            if (action === "reject") await rejectTicket(id);
+            if (action === "delete") await deleteTicket(id);
+            await loadTickets();
+        } catch (e) {
+            setStatus(tableStatus, e.message || "Action failed.", "err");
+        }
+    });
+
+    function setLiveState(text, kind) {
+        if (!liveIndicator) return;
+        liveIndicator.textContent = text;
+        liveIndicator.className = kind || "";
+    }
+
+    function connectTicketStream() {
+        if (ticketEventSource) {
+            ticketEventSource.close();
+            ticketEventSource = null;
+        }
+        if (!currentUser || !currentUser.userId) {
+            setLiveState("login required", "err");
+            return;
+        }
+        let url;
+        if (currentUser.role === "ADMIN") {
+            url = "/api/tickets/stream?watchAll=true&userRole=ADMIN";
+        } else {
+            url = "/api/tickets/stream?forUserId=" + encodeURIComponent(currentUser.userId);
+        }
+        setLiveState("connecting…", "");
+        try {
+            ticketEventSource = new EventSource(url);
+        } catch (e) {
+            setLiveState("unavailable", "err");
+            return;
+        }
+        ticketEventSource.addEventListener("ticket-update", () => {
+            loadTickets();
+        });
+        ticketEventSource.addEventListener("ticket-activity", (ev) => {
+            try {
+                const d = JSON.parse(ev.data);
+                prependActivityFromStream(d);
+            } catch (_) {}
+            loadTickets();
+            setTimeout(() => loadNotificationBadge(), 250);
+        });
+        ticketEventSource.onopen = () => setLiveState("on", "ok");
+        ticketEventSource.onerror = () => {
+            setLiveState("reconnecting…", "err");
+        };
+    }
+
+    document.getElementById("refresh-btn").addEventListener("click", loadTickets);
+
+    const clearClosedBtn = document.getElementById("clear-closed-btn");
+    if (clearClosedBtn) {
+        clearClosedBtn.hidden = !currentUser || currentUser.role !== "USER";
+        clearClosedBtn.addEventListener("click", async () => {
+            if (!currentUser || !currentUser.userId) return;
+            if (!window.confirm("Remove all closed tickets from your history? This cannot be undone.")) return;
+            try {
+                const res = await fetch("/api/tickets/user/" + encodeURIComponent(currentUser.userId) + "/closed", {
+                    method: "DELETE",
+                    headers: authHeaders()
+                });
+                const body = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(body.message || body.error || "Could not clear tickets");
+                }
+                const n = typeof body.deleted === "number" ? body.deleted : 0;
+                setStatus(tableStatus, n ? "Removed " + n + " closed ticket(s)." : "No closed tickets to remove.", n ? "ok" : "");
+                await loadTickets();
+            } catch (e) {
+                setStatus(tableStatus, e.message || "Clear failed.", "err");
+            }
+        });
+    }
+
+    document.getElementById("clear-form").addEventListener("click", () => {
+        form.reset();
+        resetTicketAttachments();
+        setStatus(formStatus, "");
+    });
+    form.addEventListener("submit", createTicket);
+
+    loadResources();
+    loadTickets();
+
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+<script src="/js/header-loader.js"></script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>

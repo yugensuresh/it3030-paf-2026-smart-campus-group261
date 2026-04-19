@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/resource.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+</head>
+<body>
+<div class="admin-app">
+    <aside class="admin-sidebar">
+        <p class="admin-sidebar-title">Management</p>
+        <nav class="admin-sidebar-nav" aria-label="Management modules">
+            <a href="/admin.html" class="admin-sidebar-link">Dashboard</a>
+            <a href="/admin-users.html" class="admin-sidebar-link">User management</a>
+            <details class="admin-sidebar-details">
+                <summary class="admin-sidebar-summary">Resource management</summary>
+                <div class="admin-sidebar-dropdown-panel">
+                    <a href="/admin-show-resource.html" class="admin-sidebar-sublink">Show resources</a>
+                    <a href="/admin-add-resource.html" class="admin-sidebar-sublink">Add resource</a>
+                </div>
+            </details>
+            <a href="/admin-bookings.html" class="admin-sidebar-link">Booking management</a>
+            <a href="/admin-contact.html" class="admin-sidebar-link">Contact us management</a>
+        </nav>
+    </aside>
+    <div class="admin-content">
+        <header class="admin-top-bar">
+            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Nexus — Home">
+                <img class="admin-brand-logo" src="/images/campus-nexus-logo.png" width="36" height="36" alt="" decoding="async">
+                <span class="admin-top-bar-brand">Campus Nexus — Admin</span>
+            </a>
+            <a href="/profile.html" class="admin-top-bar-link nav-cta">My Profile</a>
+        </header>
+        <main class="admin-main-scroll">
+            <div class="admin-page-inner">
+                <section class="hero">
+                    <p class="eyebrow">ADMIN PANEL</p>
+                    <h1>Admin Dashboard</h1>
+                    <p class="subtitle">Monitor your Campus Nexus platform and access core management tools.</p>
+                </section>
+
+                <section class="admin-stats-grid">
+                    <article class="admin-stat-card">
+                        <p class="admin-stat-label">Total Resources</p>
+                        <p id="total-resources" class="admin-stat-value">0</p>
+                    </article>
+                    <article class="admin-stat-card">
+                        <p class="admin-stat-label">Pending booking requests</p>
+                        <p id="pending-bookings" class="admin-stat-value">0</p>
+                    </article>
+                    <article class="admin-stat-card">
+                        <p class="admin-stat-label">Open maintenance tickets</p>
+                        <p id="open-tickets" class="admin-stat-value">0</p>
+                    </article>
+                    <article class="admin-stat-card">
+                        <p class="admin-stat-label">Logged In Users</p>
+                        <p class="admin-stat-value">1</p>
+                    </article>
+                    <article class="admin-stat-card">
+                        <p class="admin-stat-label">System Status</p>
+                        <p class="admin-stat-value">Active</p>
+                    </article>
+                </section>
+
+                <section class="card">
+                    <h2>Recent Activity</h2>
+                    <ul class="admin-activity-list">
+                        <li>Admin logged in successfully.</li>
+                        <li>Profile module is available.</li>
+                        <li>Resource management module is online.</li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+        <div id="site-footer"></div>
+    </div>
+</div>
+
+<script>
+    const totalResources = document.getElementById("total-resources");
+    const pendingBookingsEl = document.getElementById("pending-bookings");
+    const openTicketsEl = document.getElementById("open-tickets");
+
+    async function refreshOpenTicketsCount() {
+        if (!openTicketsEl) return;
+        try {
+            const res = await fetch("/api/tickets?page=0&size=1&sort=createdAt&direction=desc");
+            if (!res.ok) {
+                openTicketsEl.textContent = "—";
+                return;
+            }
+            const data = await res.json();
+            const n = typeof data.totalItems === "number" ? data.totalItems : 0;
+            openTicketsEl.textContent = String(n);
+        } catch {
+            openTicketsEl.textContent = "—";
+        }
+    }
+
+    async function refreshPendingCount() {
+        try {
+            const res = await fetch("/api/bookings/search?status=PENDING&page=0&size=1");
+            if (!res.ok) return;
+            const data = await res.json();
+            const n = typeof data.totalItems === "number" ? data.totalItems : 0;
+            pendingBookingsEl.textContent = String(n);
+        } catch {
+            pendingBookingsEl.textContent = "—";
+        }
+    }
+
+    const userRaw = localStorage.getItem("smartCampusUser");
+
+    if (userRaw) {
+        try {
+            const user = JSON.parse(userRaw);
+            if (user.role !== "ADMIN") {
+                window.location.href = "/";
+            }
+            fetch("/api/resources")
+                .then((response) => response.ok ? response.json() : [])
+                .then((resources) => {
+                    totalResources.textContent = Array.isArray(resources) ? String(resources.length) : "0";
+                })
+                .catch(() => {
+                    totalResources.textContent = "0";
+                });
+            refreshPendingCount();
+            refreshOpenTicketsCount();
+        } catch (_) {
+            localStorage.removeItem("smartCampusUser");
+            if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
+                window.SmartCampusResourceApi.clearCredentials();
+            }
+            window.location.href = "/login.html";
+        }
+    } else {
+        window.location.href = "/login.html";
+    }
+
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+
+</script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+/* Admin — List / filter resources (/admin-show-resource.html) */
+
+.admin-show-resource-page .admin-page-inner > h1 {
+    font-family: var(--ff-display);
+    font-size: clamp(1.5rem, 2.5vw, 1.85rem);
+    font-weight: 700;
+    color: var(--cream);
+    margin: 0 0 8px;
+}
+
+.admin-show-resource-page .resource-browse-intro {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0 0 22px;
+    max-width: 65ch;
+}
+
+.admin-show-resource-page .resource-browse-intro strong {
+    color: var(--gold2);
+}
+
+.admin-show-resource-page .admin-page-inner > .card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 20px var(--shadow);
+    margin-bottom: 24px;
+}
+
+.admin-show-resource-page .admin-page-inner > .card h2 {
+    font-family: var(--ff-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-show-resource-page .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.admin-show-resource-page .grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+}
+
+.admin-show-resource-page .grid input,
+.admin-show-resource-page .grid select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--navy3);
+    color: var(--white);
+    font-size: 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.admin-show-resource-page .grid input:focus,
+.admin-show-resource-page .grid select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--glow);
+}
+
+.admin-show-resource-page .card .actions {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.admin-show-resource-page .card .actions button {
+    margin: 0;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: linear-gradient(135deg, var(--gold), #a87c2a);
+    color: var(--navy);
+}
+
+.admin-show-resource-page .card .actions button:hover {
+    filter: brightness(1.06);
+}
+
+.admin-show-resource-page .card .actions button.secondary {
+    background: var(--navy3);
+    color: var(--white);
+    border: 1px solid var(--border);
+}
+
+.admin-show-resource-page .card .actions button.secondary:hover {
+    border-color: rgba(201, 168, 76, 0.45);
+    color: var(--gold2);
+}
+
+.admin-show-resource-page #status-text {
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--muted);
+    min-height: 1.3em;
+}
+
+.admin-show-resource-page #status-text:not(:empty) {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(201, 168, 76, 0.06);
+    border: 1px solid rgba(201, 168, 76, 0.12);
+}
+
+.admin-show-resource-page .admin-show-resource-table-wrap {
+    overflow-x: auto;
+    margin-top: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.admin-show-resource-page table.admin-show-resource-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-show-resource-page table.admin-show-resource-table thead th {
+    padding: 12px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gold);
+    background: var(--navy3);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.admin-show-resource-page table.admin-show-resource-table tbody td {
+    padding: 11px 12px;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.admin-show-resource-page table.admin-show-resource-table tbody tr:hover {
+    background: rgba(201, 168, 76, 0.06);
+}
+
+.admin-show-resource-page table.admin-show-resource-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-show-resource-page .edit-btn,
+.admin-show-resource-page .delete-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    margin: 2px 4px 2px 0;
+    cursor: pointer;
+}
+
+.admin-show-resource-page .edit-btn {
+    border: 1px solid transparent;
+    background: linear-gradient(135deg, var(--gold), #a87c2a);
+    color: var(--navy);
+    font-weight: 600;
+}
+
+.admin-show-resource-page .edit-btn:hover {
+    filter: brightness(1.06);
+}
+
+.admin-show-resource-page .delete-btn.secondary {
+    background: var(--navy3);
+    color: var(--white);
+    border: 1px solid var(--border);
+    font-weight: 600;
+}
+
+.admin-show-resource-page .delete-btn.secondary:hover {
+    border-color: rgba(201, 168, 76, 0.45);
+    color: var(--gold2);
+}
+
+@media (max-width: 640px) {
+    .admin-show-resource-page .grid {
+        grid-template-columns: 1fr;
+    }
+}

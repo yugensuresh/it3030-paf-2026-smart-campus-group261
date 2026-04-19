@@ -1,0 +1,198 @@
+/**
+ * Campus Nexus — shared front-end: fonts, design tokens, document base,
+ * scrollbars, form normalization, layout stability (Windows + macOS).
+ * Include first among stylesheets (after /app-settings.js if used).
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
+
+:root {
+  --navy: #0b1120;
+  --navy2: #111827;
+  --navy3: #1a2740;
+  --gold: #c9a84c;
+  --gold2: #f0c96d;
+  --cream: #f5f0e8;
+  --muted: #8899aa;
+  --white: #ffffff;
+  --border: rgba(201, 168, 76, 0.18);
+  --glow: rgba(201, 168, 76, 0.12);
+  --shadow: rgba(0, 0, 0, 0.35);
+  --radius: 14px;
+  --trans: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --ff-display: "Playfair Display", Georgia, serif;
+  /* Inter as primary webfont; ui-sans-serif / system-ui map to SF on macOS and Segoe on Windows */
+  --ff-body: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
+  --scrollbar-size: 10px;
+  --scrollbar-thumb: color-mix(in srgb, var(--gold) 50%, var(--navy3));
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--gold2) 55%, var(--navy3));
+  --scrollbar-track: var(--navy2);
+  --scrollbar-corner: var(--navy2);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Reserve space for the vertical scrollbar so content width stays stable (Windows). */
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--scrollbar-track);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  border: 2px solid var(--scrollbar-track);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-corner);
+}
+
+/**
+ * Optional: use on any scrollable region for consistent overflow + gutter inside nested panels.
+ * (Document-level stability is handled by html { scrollbar-gutter: stable }.)
+ */
+.cn-scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  font-family: var(--ff-body);
+  font-size: var(--app-font-size, 16px);
+  background: var(--navy);
+  color: var(--white);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Form normalization (cross-browser, non-native chrome) ── */
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  background-color: var(--navy3);
+  color: var(--white);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+select:not([multiple]) {
+  padding-right: 2.25rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238899aa' d='M1.41 0 6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 10px 6px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.05em;
+  height: 1.05em;
+  accent-color: var(--gold);
+  vertical-align: middle;
+}
+
+input[type="file"] {
+  font-size: 0.875rem;
+  max-width: 100%;
+}
+
+input[type="file"]::file-selector-button {
+  font: inherit;
+  margin-right: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: calc(var(--radius) - 6px);
+  border: 1px solid var(--border);
+  background: var(--navy2);
+  color: var(--cream);
+  cursor: pointer;
+}
+
+input[type="file"]::file-selector-button:hover {
+  border-color: color-mix(in srgb, var(--gold) 40%, var(--border));
+}
+
+/* Keyboard shortcut hints in UI */
+kbd,
+.kbd {
+  display: inline-block;
+  padding: 0.12em 0.45em;
+  font-family: var(--ff-body);
+  font-size: 0.85em;
+  font-weight: 600;
+  line-height: 1.35;
+  vertical-align: middle;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--navy3);
+  color: var(--cream);
+  box-shadow: 0 1px 0 var(--shadow);
+}

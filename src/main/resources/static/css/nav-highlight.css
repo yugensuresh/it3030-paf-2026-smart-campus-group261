@@ -1,0 +1,30 @@
+/* Current page highlight — used with nav-highlight.js (.nav-is-active) */
+
+header.top-nav nav a.nav-is-active {
+    color: var(--gold2, #f0c96d) !important;
+    font-weight: 700;
+}
+
+header.top-nav nav a.nav-is-active:not(.nav-cta):not(.btn-link) {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--gold, #c9a84c);
+}
+
+header.top-nav nav a.nav-is-active.nav-cta,
+header.top-nav nav a.nav-is-active.btn-link {
+    background: rgba(201, 168, 76, 0.22) !important;
+    border-color: var(--gold2, #f0c96d) !important;
+    color: var(--gold2, #f0c96d) !important;
+}
+
+.admin-top-bar a.nav-is-active {
+    color: var(--gold2, #f0c96d) !important;
+    font-weight: 700;
+}
+
+.admin-top-bar a.nav-is-active.nav-cta {
+    background: rgba(201, 168, 76, 0.22) !important;
+    border-color: var(--gold2, #f0c96d) !important;
+}

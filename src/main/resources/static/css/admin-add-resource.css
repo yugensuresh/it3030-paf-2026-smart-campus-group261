@@ -1,0 +1,154 @@
+/* Admin — Add / update resource (/admin-add-resource.html) */
+
+.admin-add-resource-page .admin-page-inner > h1 {
+    font-family: var(--ff-display);
+    font-size: clamp(1.5rem, 2.5vw, 1.85rem);
+    font-weight: 700;
+    color: var(--cream);
+    margin: 0 0 8px;
+}
+
+.admin-add-resource-page .resource-browse-intro {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0 0 22px;
+    max-width: 60ch;
+}
+
+.admin-add-resource-page .resource-browse-intro strong {
+    color: var(--gold2);
+}
+
+.admin-add-resource-page #resource-admin-section.card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 20px var(--shadow);
+    margin-bottom: 24px;
+}
+
+.admin-add-resource-page #resource-admin-section h2 {
+    font-family: var(--ff-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-add-resource-page #form-status.status-text,
+.admin-add-resource-page #form-status {
+    margin-bottom: 14px;
+    min-height: 1.3em;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.admin-add-resource-page #form-status:not(:empty) {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(201, 168, 76, 0.06);
+    border: 1px solid rgba(201, 168, 76, 0.12);
+}
+
+.admin-add-resource-page .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+.admin-add-resource-page .grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+}
+
+.admin-add-resource-page .grid .admin-add-resource-description {
+    grid-column: 1 / -1;
+}
+
+.admin-add-resource-page .grid textarea {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--navy3);
+    color: var(--white);
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.45;
+    resize: vertical;
+    min-height: 88px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.admin-add-resource-page .grid textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--glow);
+}
+
+.admin-add-resource-page .grid input,
+.admin-add-resource-page .grid select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--navy3);
+    color: var(--white);
+    font-size: 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.admin-add-resource-page .grid input:focus,
+.admin-add-resource-page .grid select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--glow);
+}
+
+.admin-add-resource-page .actions {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.admin-add-resource-page #resource-admin-section .actions button {
+    margin: 0;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: linear-gradient(135deg, var(--gold), #a87c2a);
+    color: var(--navy);
+}
+
+.admin-add-resource-page #resource-admin-section .actions button:hover {
+    filter: brightness(1.06);
+}
+
+.admin-add-resource-page #resource-admin-section .actions button.secondary {
+    background: var(--navy3);
+    color: var(--white);
+    border: 1px solid var(--border);
+}
+
+.admin-add-resource-page #resource-admin-section .actions button.secondary:hover {
+    border-color: rgba(201, 168, 76, 0.45);
+    color: var(--gold2);
+}
+
+@media (max-width: 640px) {
+    .admin-add-resource-page .grid {
+        grid-template-columns: 1fr;
+    }
+}

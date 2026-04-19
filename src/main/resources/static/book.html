@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My bookings | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/resource.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/notification-bell.css">
+</head>
+<body class="with-shared-header">
+<div id="site-header-mount"></div>
+
+<main class="container book-page">
+    <header class="book-page-header">
+        <h1 class="book-page-title">My bookings</h1>
+        <p class="book-page-lead">See every reservation you have made and its status. New requests stay pending until an administrator approves them.</p>
+    </header>
+
+    <section class="card book-page-card hidden" id="book-request-card">
+        <h2 class="book-section-heading">New booking request</h2>
+        <p id="book-resource-meta" class="resource-browse-intro"></p>
+        <h3 id="book-resource-title" class="book-resource-name">Loading…</h3>
+        <p id="book-status" class="status-text"></p>
+
+        <form id="book-form" class="hidden">
+            <div class="grid">
+                <label>Date
+                    <input id="book-date" type="date" required>
+                </label>
+                <label>Start time
+                    <input id="book-start" type="time" required>
+                </label>
+                <label>End time
+                    <input id="book-end" type="time" required>
+                </label>
+                <label>Expected attendees (optional)
+                    <input id="book-attendees" type="number" min="1" placeholder="e.g. 12">
+                </label>
+            </div>
+            <label style="margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:14px;">
+                Purpose (min 5 characters)
+                <textarea id="book-purpose" rows="4" minlength="5" maxlength="500" required placeholder="Describe how you will use this space or equipment"></textarea>
+            </label>
+            <div class="actions">
+                <button type="submit">Submit booking request</button>
+                <a class="resource-back-link" href="/resource.html">Browse more resources</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="card book-page-card book-page-card--tip hidden" id="book-tip-card">
+        <h2 class="book-section-heading">Start a new booking</h2>
+        <p class="resource-browse-intro">Open the resources list, pick a space or item, and use <strong>Book</strong> to add a reservation. It will appear in your list below once submitted.</p>
+        <div class="actions">
+            <a class="resource-book-btn" href="/resource.html">Browse resources</a>
+        </div>
+    </section>
+
+    <section class="card bookings-panel" id="my-bookings-section">
+        <div class="bookings-panel__head">
+            <h2 class="book-section-heading">Your reservations</h2>
+            <p id="bookings-result-hint" class="bookings-result-hint bookings-panel__hint hidden" aria-live="polite"></p>
+        </div>
+
+        <div class="bookings-controls">
+            <p class="bookings-controls__label">Filter &amp; search</p>
+            <div class="bookings-toolbar">
+                <div class="bookings-filters">
+                    <label>Status
+                        <select id="filter-status" disabled>
+                            <option value="">All (except cancelled)</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="REJECTED">Rejected</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </label>
+                    <label>From
+                        <input type="date" id="filter-date-from" disabled aria-label="Filter from booking date">
+                    </label>
+                    <label>To
+                        <input type="date" id="filter-date-to" disabled aria-label="Filter to booking date">
+                    </label>
+                    <div class="bookings-filter-actions">
+                        <button type="button" class="secondary bookings-filter-clear" id="filter-clear" disabled>Reset filters</button>
+                        <button type="button" class="secondary bookings-history-clear" id="booking-history-clear" disabled title="Removes approved, rejected, and cancelled bookings from your account. Pending requests stay.">Clear history</button>
+                    </div>
+                </div>
+                <div class="bookings-search-row">
+                    <label for="bookings-search" class="visually-hidden">Search your bookings</label>
+                    <div class="bookings-search-wrap">
+                        <input type="search" id="bookings-search" class="bookings-search-input" placeholder="Search resources, dates, purpose, status, booking #…" autocomplete="off" disabled enterkeyhint="search">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p id="my-bookings-load-status" class="status-text" aria-live="polite"></p>
+        <p id="bookings-filter-empty" class="bookings-empty-msg hidden" role="status"></p>
+        <div id="bookings-cards" class="bookings-cards"></div>
+    </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const resourceIdRaw = params.get("resourceId");
+        const resourceId = resourceIdRaw != null && resourceIdRaw !== "" ? Number(resourceIdRaw) : NaN;
+        const hasValidResource = Number.isFinite(resourceId) && resourceId >= 1;
+
+        const titleEl = document.getElementById("book-resource-title");
+        const metaEl = document.getElementById("book-resource-meta");
+        const statusEl = document.getElementById("book-status");
+        const formEl = document.getElementById("book-form");
+        const dateInput = document.getElementById("book-date");
+        const requestCard = document.getElementById("book-request-card");
+        const tipCard = document.getElementById("book-tip-card");
+        const bookingsCardsEl = document.getElementById("bookings-cards");
+        const loadStatusEl = document.getElementById("my-bookings-load-status");
+        const searchInput = document.getElementById("bookings-search");
+        const filterEmptyEl = document.getElementById("bookings-filter-empty");
+        const filterStatusEl = document.getElementById("filter-status");
+        const filterDateFromEl = document.getElementById("filter-date-from");
+        const filterDateToEl = document.getElementById("filter-date-to");
+        const filterClearBtn = document.getElementById("filter-clear");
+        const bookingHistoryClearBtn = document.getElementById("booking-history-clear");
+        const resultHintEl = document.getElementById("bookings-result-hint");
+
+        let allBookings = [];
+
+        function todayLocalIso() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${y}-${m}-${day}`;
+        }
+
+        function requireLogin() {
+            const next = window.location.pathname + window.location.search;
+            window.location.href = "/login.html?next=" + encodeURIComponent(next || "/book.html");
+        }
+
+        function getCurrentUser() {
+            try {
+                const raw = localStorage.getItem("smartCampusUser");
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch {
+                return null;
+            }
+        }
+
+        function escapeHtml(s) {
+            if (s == null) return "";
+            return String(s)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function fmtLocalDate(d) {
+            if (d == null) return "—";
+            if (typeof d === "string") return d.length >= 10 ? d.slice(0, 10) : d;
+            if (Array.isArray(d) && d.length >= 3) {
+                const y = d[0];
+                const m = String(d[1]).padStart(2, "0");
+                const day = String(d[2]).padStart(2, "0");
+                return `${y}-${m}-${day}`;
+            }
+            return String(d);
+        }
+
+        function formatTime(t) {
+            if (t == null) return "—";
+            if (typeof t === "string") return t.length >= 5 ? t.slice(0, 5) : t;
+            if (Array.isArray(t) && t.length >= 2) {
+                const h = String(t[0]).padStart(2, "0");
+                const m = String(t[1]).padStart(2, "0");
+                return h + ":" + m;
+            }
+            return String(t);
+        }
+
+        function statusPillClass(status) {
+            const s = (status || "").toUpperCase();
+            if (s === "PENDING") return "booking-status-pill booking-status-pill--pending";
+            if (s === "APPROVED") return "booking-status-pill booking-status-pill--approved";
+            if (s === "REJECTED") return "booking-status-pill booking-status-pill--rejected";
+            if (s === "CANCELLED") return "booking-status-pill booking-status-pill--cancelled";
+            return "booking-status-pill booking-status-pill--pending";
+        }
+
+        function formatResourceType(t) {
+            if (t == null || t === "") return "";
+            return String(t).replace(/_/g, " ");
+        }
+
+        function fmtCreatedAt(iso) {
+            if (iso == null || iso === "") return "";
+            if (typeof iso === "string") {
+                const d = iso.slice(0, 10);
+                const t = iso.length > 11 ? iso.slice(11, 16) : "";
+                return t ? d + " · " + t : d;
+            }
+            return String(iso);
+        }
+
+        function extractBookingsFromResponse(data) {
+            if (!data || typeof data !== "object") return [];
+            if (Array.isArray(data.content)) return data.content;
+            if (Array.isArray(data)) return data;
+            return [];
+        }
+
+        /** Comparable YYYY-MM-DD for range filters, or null */
+        function bookingDateIso(b) {
+            const s = fmtLocalDate(b.bookingDate);
+            if (!s || s === "—" || s.length < 10) return null;
+            return s.slice(0, 10);
+        }
+
+        function bookingSearchBlob(b) {
+            const dateIso = bookingDateIso(b);
+            const parts = [
+                b.resourceName,
+                b.resourceLocation,
+                b.resourceType,
+                formatResourceType(b.resourceType),
+                dateIso,
+                dateIso && dateIso.replace(/-/g, ""),
+                formatTime(b.startTime),
+                formatTime(b.endTime),
+                b.purpose,
+                b.status,
+                (b.status || "").replace(/_/g, " "),
+                b.rejectionReason,
+                b.id != null ? String(b.id) : "",
+                b.id != null ? "#" + b.id : ""
+            ];
+            return parts
+                .filter(function (x) {
+                    return x != null && String(x).trim() !== "";
+                })
+                .join(" ")
+                .toLowerCase();
+        }
+
+        function normalizeSearchQuery(q) {
+            return String(q || "")
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, " ");
+        }
+
+        /** Each whitespace-separated token must appear (AND). */
+        function matchesSearchTokens(b, query) {
+            const normalized = normalizeSearchQuery(query);
+            if (!normalized) return true;
+            const tokens = normalized.split(" ").filter(function (t) {
+                return t.length > 0;
+            });
+            if (tokens.length === 0) return true;
+            const blob = bookingSearchBlob(b);
+            for (let i = 0; i < tokens.length; i++) {
+                if (blob.indexOf(tokens[i]) === -1) return false;
+            }
+            return true;
+        }
+
+        function matchesStatusFilter(b, statusValue) {
+            const s = (b.status || "").toUpperCase();
+            if (!statusValue) {
+                return s !== "CANCELLED";
+            }
+            return s === statusValue.toUpperCase();
+        }
+
+        function matchesDateRangeFilter(b) {
+            const iso = bookingDateIso(b);
+            if (!iso) return true;
+            const fromVal = (filterDateFromEl.value || "").trim();
+            const toVal = (filterDateToEl.value || "").trim();
+            if (fromVal && iso < fromVal) return false;
+            if (toVal && iso > toVal) return false;
+            return true;
+        }
+
+        function hasActiveFilters() {
+            if (normalizeSearchQuery(searchInput.value)) return true;
+            if (filterStatusEl.value) return true;
+            if ((filterDateFromEl.value || "").trim()) return true;
+            if ((filterDateToEl.value || "").trim()) return true;
+            return false;
+        }
+
+        function applyAllFilters() {
+            const statusVal = filterStatusEl.value;
+            return allBookings.filter(function (b) {
+                if (!matchesStatusFilter(b, statusVal)) return false;
+                if (!matchesDateRangeFilter(b)) return false;
+                if (!matchesSearchTokens(b, searchInput.value)) return false;
+                return true;
+            });
+        }
+
+        function updateResultHint(filteredCount) {
+            const total = allBookings.length;
+            if (total === 0) {
+                resultHintEl.classList.add("hidden");
+                resultHintEl.textContent = "";
+                return;
+            }
+            const active = hasActiveFilters();
+            const nCancelled = allBookings.filter(function (b) {
+                return (b.status || "").toUpperCase() === "CANCELLED";
+            }).length;
+            if (!active) {
+                let t = filteredCount + " reservation" + (filteredCount === 1 ? "" : "s");
+                if (nCancelled > 0 && !filterStatusEl.value) {
+                    t += ". Cancelled bookings are hidden—choose “Cancelled” in Status to see them.";
+                }
+                resultHintEl.textContent = t;
+                resultHintEl.classList.remove("hidden");
+                return;
+            }
+            resultHintEl.textContent =
+                "Showing " + filteredCount + " of " + total + (active ? " (filters active)" : "");
+            resultHintEl.classList.remove("hidden");
+        }
+
+        function setFilterControlsEnabled(enabled) {
+            searchInput.disabled = !enabled;
+            filterStatusEl.disabled = !enabled;
+            filterDateFromEl.disabled = !enabled;
+            filterDateToEl.disabled = !enabled;
+            filterClearBtn.disabled = !enabled;
+            if (bookingHistoryClearBtn) bookingHistoryClearBtn.disabled = !enabled;
+        }
+
+        function clearFilters() {
+            searchInput.value = "";
+            filterStatusEl.value = "";
+            filterDateFromEl.value = "";
+            filterDateToEl.value = "";
+            applyBookingFilter();
+        }
+
+        function formatDateParts(bookingDate) {
+            const iso = fmtLocalDate(bookingDate);
+            if (!iso || iso === "—" || iso.length < 10) return null;
+            const parts = iso.slice(0, 10).split("-");
+            const y = Number(parts[0]);
+            const mo = Number(parts[1]);
+            const d = Number(parts[2]);
+            if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null;
+            const dt = new Date(y, mo - 1, d);
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            return {
+                weekday: days[dt.getDay()],
+                day: String(d),
+                mon: months[mo - 1],
+                year: String(y)
+            };
+        }
+
+        function renderBookingCard(b) {
+            const name = b.resourceName || "Resource #" + (b.resourceId != null ? b.resourceId : "");
+            const typeLoc = [];
+            if (b.resourceType) typeLoc.push(formatResourceType(b.resourceType));
+            if (b.resourceLocation) typeLoc.push(b.resourceLocation);
+            const metaLine = typeLoc.join(" · ");
+            const when = formatTime(b.startTime) + " – " + formatTime(b.endTime);
+            const statusLabel = (b.status || "").replace(/_/g, " ");
+            const purpose = (b.purpose || "").trim() || "—";
+            const dp = formatDateParts(b.bookingDate);
+            const dateAside = dp
+                ? '<aside class="booking-detail-card__aside" aria-hidden="true">' +
+                  '<div class="booking-date-badge">' +
+                  '<span class="booking-date-badge__wd">' +
+                  escapeHtml(dp.weekday) +
+                  "</span>" +
+                  '<span class="booking-date-badge__day">' +
+                  escapeHtml(dp.day) +
+                  "</span>" +
+                  '<span class="booking-date-badge__mon">' +
+                  escapeHtml(dp.mon) +
+                  "</span>" +
+                  '<span class="booking-date-badge__yr">' +
+                  escapeHtml(dp.year) +
+                  "</span>" +
+                  "</div></aside>"
+                : "";
+            const rejectBlock =
+                (b.status || "").toUpperCase() === "REJECTED" && b.rejectionReason
+                    ? '<div class="booking-detail-reject"><strong>Reason</strong><p>' + escapeHtml(b.rejectionReason) + "</p></div>"
+                    : "";
+            const stUp = (b.status || "").toUpperCase();
+            let actionBlock = "";
+            if (stUp === "PENDING" && b.id != null) {
+                actionBlock =
+                    '<div class="booking-card-actions">' +
+                    '<button type="button" class="secondary" data-booking-cancel="' +
+                    String(Number(b.id)) +
+                    '">Close</button>' +
+                    '<span class="booking-card-actions__hint">Withdraw this request before an admin reviews it.</span>' +
+                    "</div>";
+            }
+            const footParts = [];
+            if (b.id != null) footParts.push("Booking #" + b.id);
+            const ca = fmtCreatedAt(b.createdAt);
+            if (ca) footParts.push("Submitted " + ca);
+            const foot = footParts.length ? '<footer class="booking-detail-foot">' + escapeHtml(footParts.join(" · ")) + "</footer>" : "";
+
+            return (
+                '<article class="booking-detail-card">' +
+                '<div class="booking-detail-card__layout">' +
+                dateAside +
+                '<div class="booking-detail-card__body">' +
+                '<div class="booking-detail-card__head">' +
+                "<h3 class=\"booking-detail-card__title\">" +
+                escapeHtml(name) +
+                "</h3>" +
+                '<span class="' +
+                statusPillClass(b.status) +
+                '">' +
+                escapeHtml(statusLabel) +
+                "</span>" +
+                "</div>" +
+                (metaLine
+                    ? '<p class="booking-detail-card__meta">' + escapeHtml(metaLine) + "</p>"
+                    : "") +
+                '<div class="booking-detail-facts">' +
+                '<div class="booking-detail-fact">' +
+                '<span class="booking-detail-fact__label">Date</span>' +
+                '<span class="booking-detail-fact__value">' +
+                escapeHtml(fmtLocalDate(b.bookingDate)) +
+                "</span></div>" +
+                '<div class="booking-detail-fact">' +
+                '<span class="booking-detail-fact__label">Time</span>' +
+                '<span class="booking-detail-fact__value">' +
+                escapeHtml(when) +
+                "</span></div></div>" +
+                '<div class="booking-detail-purpose-block">' +
+                '<span class="booking-detail-purpose-label">Purpose</span>' +
+                '<p class="booking-detail-purpose">' +
+                escapeHtml(purpose) +
+                "</p></div>" +
+                rejectBlock +
+                actionBlock +
+                foot +
+                "</div></div></article>"
+            );
+        }
+
+        function renderBookingsList(list) {
+            filterEmptyEl.classList.add("hidden");
+            filterEmptyEl.textContent = "";
+            updateResultHint(list.length);
+            if (list.length === 0) {
+                if (allBookings.length === 0) {
+                    bookingsCardsEl.innerHTML =
+                        '<p class="bookings-empty-msg">No bookings yet. Browse resources and submit a request — it will show up here.</p>';
+                } else {
+                    if (hasActiveFilters()) {
+                        filterEmptyEl.textContent =
+                            "No bookings match your current filters. Try clearing filters or adjusting the search.";
+                    } else {
+                        const allCancelled = allBookings.every(function (b) {
+                            return (b.status || "").toUpperCase() === "CANCELLED";
+                        });
+                        filterEmptyEl.textContent = allCancelled
+                            ? "No active reservations. Withdrawn or cleared bookings are hidden—choose “Cancelled” in Status to review them."
+                            : "No bookings to show.";
+                    }
+                    filterEmptyEl.classList.remove("hidden");
+                    bookingsCardsEl.innerHTML = "";
+                }
+                return;
+            }
+            bookingsCardsEl.innerHTML = list.map(renderBookingCard).join("");
+        }
+
+        function applyBookingFilter() {
+            const list = applyAllFilters();
+            renderBookingsList(list);
+        }
+
+        async function loadMyBookings(userId) {
+            loadStatusEl.textContent = "Loading your bookings…";
+            bookingsCardsEl.innerHTML = "";
+            resultHintEl.classList.add("hidden");
+            setFilterControlsEnabled(false);
+            try {
+                const res = await fetch(
+                    "/api/bookings/user/" + encodeURIComponent(String(userId)) + "?page=0&size=200"
+                );
+                const data = await res.json().catch(function () {
+                    return null;
+                });
+                if (!res.ok) throw new Error("load failed");
+                allBookings = extractBookingsFromResponse(data);
+                loadStatusEl.textContent = "";
+                clearFilters();
+                setFilterControlsEnabled(true);
+            } catch {
+                allBookings = [];
+                loadStatusEl.textContent = "Could not load your bookings. Try refreshing the page.";
+                setFilterControlsEnabled(false);
+            }
+        }
+
+        function onFilterChange() {
+            applyBookingFilter();
+        }
+
+        searchInput.addEventListener("input", onFilterChange);
+        searchInput.addEventListener("search", onFilterChange);
+        filterStatusEl.addEventListener("change", onFilterChange);
+        filterDateFromEl.addEventListener("change", onFilterChange);
+        filterDateToEl.addEventListener("change", onFilterChange);
+        filterClearBtn.addEventListener("click", clearFilters);
+
+        if (bookingHistoryClearBtn) {
+            bookingHistoryClearBtn.addEventListener("click", async function () {
+                if (!resolvedUserId) return;
+                const msg =
+                    "Remove all approved, rejected, and cancelled bookings from your history?\n\n" +
+                    "Pending requests will stay. This cannot be undone.";
+                if (!window.confirm(msg)) return;
+                const email = user && user.email ? String(user.email).trim() : "";
+                if (!email) {
+                    loadStatusEl.textContent = "Your account has no email on file.";
+                    return;
+                }
+                loadStatusEl.textContent = "Clearing history…";
+                try {
+                    const res = await fetch(
+                        "/api/bookings/user/" + encodeURIComponent(String(resolvedUserId)) + "/history",
+                        {
+                            method: "DELETE",
+                            headers: { "X-User-Email": email }
+                        }
+                    );
+                    const body = await res.json().catch(function () {
+                        return {};
+                    });
+                    if (!res.ok) {
+                        loadStatusEl.textContent = body.message || "Could not clear history.";
+                        return;
+                    }
+                    const n = typeof body.deleted === "number" ? body.deleted : 0;
+                    loadStatusEl.textContent = n
+                        ? "Removed " + n + " booking(s). Pending requests are unchanged."
+                        : "No approved, rejected, or cancelled bookings to remove.";
+                    await loadMyBookings(resolvedUserId);
+                } catch {
+                    loadStatusEl.textContent = "Network error. Try again.";
+                }
+            });
+        }
+
+        const user = getCurrentUser();
+        const resolvedUserId = (function () {
+            if (!user) return null;
+            const a = user.userId != null && user.userId !== "" ? Number(user.userId) : NaN;
+            if (Number.isFinite(a) && a > 0) return a;
+            const b = user.id != null && user.id !== "" ? Number(user.id) : NaN;
+            if (Number.isFinite(b) && b > 0) return b;
+            return null;
+        })();
+        if (resolvedUserId == null) {
+            requireLogin();
+            return;
+        }
+
+        if (hasValidResource) {
+            requestCard.classList.remove("hidden");
+            dateInput.min = todayLocalIso();
+            dateInput.value = todayLocalIso();
+
+            fetch("/api/resources/" + encodeURIComponent(resourceId))
+                .then((r) => {
+                    if (!r.ok) throw new Error("Resource not found");
+                    return r.json();
+                })
+                .then((r) => {
+                    if (r.status && r.status !== "ACTIVE") {
+                        titleEl.textContent = r.name || "Resource";
+                        metaEl.textContent = "This resource is not available for booking (status: " + r.status + ").";
+                        return;
+                    }
+                    titleEl.textContent = r.name || "Resource";
+                    const parts = [];
+                    if (r.type) parts.push(r.type.replace(/_/g, " "));
+                    if (r.location) parts.push(r.location);
+                    if (r.capacity != null) parts.push("Capacity " + r.capacity);
+                    metaEl.textContent = parts.join(" · ");
+                    formEl.classList.remove("hidden");
+                })
+                .catch(() => {
+                    titleEl.textContent = "Resource unavailable";
+                    metaEl.textContent = "We could not load this resource. You can still view your other bookings below.";
+                });
+        } else {
+            tipCard.classList.remove("hidden");
+        }
+
+        loadMyBookings(resolvedUserId);
+
+        bookingsCardsEl.addEventListener("click", async function (ev) {
+            const btn = ev.target.closest("button[data-booking-cancel]");
+            if (!btn) return;
+            const id = Number(btn.getAttribute("data-booking-cancel"));
+            if (!Number.isFinite(id) || id < 1) return;
+            if (!window.confirm(
+                "Withdraw this pending booking? You can submit a new request later if you need to."
+            )) return;
+            const email = user && user.email ? String(user.email).trim() : "";
+            if (!email) {
+                loadStatusEl.textContent = "Your account has no email on file; cannot cancel booking.";
+                return;
+            }
+            loadStatusEl.textContent = "Updating booking…";
+            try {
+                const res = await fetch("/api/bookings/" + encodeURIComponent(String(id)), {
+                    method: "DELETE",
+                    headers: { "X-User-Email": email }
+                });
+                if (!res.ok) {
+                    let errMsg = "Could not update booking.";
+                    const t = await res.text();
+                    if (t) {
+                        try {
+                            const j = JSON.parse(t);
+                            if (j.message) errMsg = j.message;
+                        } catch {
+                            if (t.length < 200) errMsg = t;
+                        }
+                    }
+                    loadStatusEl.textContent = errMsg;
+                    return;
+                }
+                loadStatusEl.textContent = "";
+                await loadMyBookings(resolvedUserId);
+            } catch {
+                loadStatusEl.textContent = "Network error. Try again.";
+            }
+        });
+
+        function normalizeTimeForApi(value) {
+            if (!value) return null;
+            return value.length === 5 ? value + ":00" : value;
+        }
+
+        formEl.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!hasValidResource) return;
+            statusEl.textContent = "Submitting…";
+            const purpose = document.getElementById("book-purpose").value.trim();
+            if (purpose.length < 5) {
+                statusEl.textContent = "Purpose must be at least 5 characters.";
+                return;
+            }
+            const attendeesRaw = document.getElementById("book-attendees").value.trim();
+            const payload = {
+                userId: resolvedUserId,
+                resourceId: resourceId,
+                bookingDate: document.getElementById("book-date").value,
+                startTime: normalizeTimeForApi(document.getElementById("book-start").value),
+                endTime: normalizeTimeForApi(document.getElementById("book-end").value),
+                purpose: purpose
+            };
+            if (attendeesRaw !== "") {
+                const n = Number(attendeesRaw);
+                if (Number.isFinite(n)) payload.expectedAttendees = n;
+            }
+            try {
+                const res = await fetch("/api/bookings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const bodyText = await res.text();
+                if (!res.ok) {
+                    let msg = "Booking failed";
+                    if (bodyText) {
+                        try {
+                            const err = JSON.parse(bodyText);
+                            if (err.message) msg = err.message;
+                        } catch {
+                            msg = bodyText;
+                        }
+                    }
+                    statusEl.textContent = msg;
+                    return;
+                }
+                statusEl.textContent = "Request submitted. It appears below and you will be notified when it is reviewed.";
+                formEl.reset();
+                dateInput.value = todayLocalIso();
+                loadMyBookings(resolvedUserId);
+            } catch {
+                statusEl.textContent = "Network error. Try again.";
+            }
+        });
+    })();
+</script>
+<script>
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+<script src="/js/header-loader.js"></script>
+<script src="/js/notification-bell.js"></script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>

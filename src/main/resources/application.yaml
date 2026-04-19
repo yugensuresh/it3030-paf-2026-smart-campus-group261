@@ -1,0 +1,97 @@
+spring:
+  application:
+    name: campus-nexus
+
+  codec:
+    max-in-memory-size: 25MB
+
+  # Database Configuration
+  datasource:
+    # maxAllowedPacket: raise client buffer; server must also allow large packets (see my.cnf max_allowed_packet).
+    url: jdbc:mysql://localhost:3306/campus_nexus_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&maxAllowedPacket=67108864
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+
+  # OAuth2 Configuration (Google Login)
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id.apps.googleusercontent.com}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            scope:
+              - email
+              - profile
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+            client-name: Google
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: email
+
+  # JWT Configuration
+  jwt:
+    secret: ${JWT_SECRET:c8f7e5d3b1a9c7e5f3d1b9a7c5e3f1d9b7a5c3e1f9d7b5a3c1e9f7d5b3a1c9e7f5}
+    expiration: 86400000  # 24 hours in milliseconds
+    refresh-expiration: 604800000  # 7 days
+
+server:
+  port: 8080
+  tomcat:
+    max-http-form-post-size: 25MB
+    max-swallow-size: 25MB
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Logging Configuration
+logging:
+  level:
+    campus_nexus: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+
+# JWT Configuration (alternative flat structure)
+app:
+  resource-admin:
+    username: admin
+    password: 123456
+  portal-admin:
+    email: admin@gmail.com
+    password: 12345
+    full-name: System Admin
+  technician:
+    email: tech@gmail.com
+    password: 12345
+    full-name: Technician User
+  jwt:
+    secret: c8f7e5d3b1a9c7e5f3d1b9a7c5e3f1d9b7a5c3e1f9d7b5a3c1e9f7d5b3a1c9e7f5
+    expiration-ms: 86400000
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method

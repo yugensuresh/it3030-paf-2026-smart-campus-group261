@@ -1,0 +1,7 @@
+/* Tokens: /css/campus-nexus-theme.css */
+
+/* Technician workbench (/tech.html only — body.page-tech): no Ticket link, no notification bell */
+body.page-tech .top-nav nav > a[href="/ticket.html"],
+body.page-tech #nav-notify-wrap {
+  display: none !important;
+}

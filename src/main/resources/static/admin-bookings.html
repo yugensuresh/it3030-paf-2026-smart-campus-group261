@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking management | Admin</title>
+    <script src="/app-settings.js"></script>
+    <script>
+        (function enforceAdmin() {
+            try {
+                const raw = localStorage.getItem("smartCampusUser");
+                if (!raw) {
+                    window.location.replace("/login.html");
+                    return;
+                }
+                if (JSON.parse(raw).role !== "ADMIN") {
+                    window.location.replace("/resource.html");
+                }
+            } catch (_) {
+                window.location.replace("/login.html");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/resource.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+</head>
+<body>
+<div class="admin-app">
+    <aside class="admin-sidebar">
+        <p class="admin-sidebar-title">Management</p>
+        <nav class="admin-sidebar-nav" aria-label="Management modules">
+            <a href="/admin.html" class="admin-sidebar-link">Dashboard</a>
+            <a href="/admin-users.html" class="admin-sidebar-link">User management</a>
+            <details class="admin-sidebar-details">
+                <summary class="admin-sidebar-summary">Resource management</summary>
+                <div class="admin-sidebar-dropdown-panel">
+                    <a href="/admin-show-resource.html" class="admin-sidebar-sublink">Show resources</a>
+                    <a href="/admin-add-resource.html" class="admin-sidebar-sublink">Add resource</a>
+                </div>
+            </details>
+            <a href="/admin-bookings.html" class="admin-sidebar-link">Booking management</a>
+            <a href="/admin-contact.html" class="admin-sidebar-link">Contact us management</a>
+        </nav>
+    </aside>
+    <div class="admin-content">
+        <header class="admin-top-bar">
+            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Nexus — Home">
+                <img class="admin-brand-logo" src="/images/campus-nexus-logo.png" width="36" height="36" alt="" decoding="async">
+                <span class="admin-top-bar-brand">Campus Nexus — Admin</span>
+            </a>
+            <a href="/profile.html" class="admin-top-bar-link nav-cta">My Profile</a>
+        </header>
+        <main class="admin-main-scroll">
+            <div class="admin-page-inner">
+                <section id="admin-bookings" class="card admin-bookings-card">
+                    <h2>Booking management</h2>
+                    <p class="admin-bookings-intro">Review reservation requests. Approve or reject pending bookings. Rejections require a short reason for the requester.</p>
+                    <p id="bookings-status" class="admin-bookings-status"></p>
+                    <div class="admin-bookings-toolbar">
+                        <label class="admin-bookings-filter">
+                            Status
+                            <select id="bookings-filter-status">
+                                <option value="">All</option>
+                                <option value="PENDING" selected>Pending</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="REJECTED">Rejected</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </label>
+                        <button type="button" id="bookings-refresh" class="admin-bookings-refresh">Refresh</button>
+                    </div>
+                    <div class="admin-bookings-table-wrap">
+                        <table class="admin-bookings-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Resource</th>
+                                <th>Requester</th>
+                                <th>Purpose</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="bookings-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="admin-bookings-pagination" id="bookings-pagination" hidden>
+                        <button type="button" id="bookings-prev" class="admin-bookings-page-btn">Previous</button>
+                        <span id="bookings-page-label" class="admin-bookings-page-label"></span>
+                        <button type="button" id="bookings-next" class="admin-bookings-page-btn">Next</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <div id="site-footer"></div>
+    </div>
+</div>
+
+<script>
+    const bookingsStatusEl = document.getElementById("bookings-status");
+    const bookingsTbody = document.getElementById("bookings-table-body");
+    const bookingsFilter = document.getElementById("bookings-filter-status");
+    const bookingsRefreshBtn = document.getElementById("bookings-refresh");
+    const bookingsPagination = document.getElementById("bookings-pagination");
+    const bookingsPrev = document.getElementById("bookings-prev");
+    const bookingsNext = document.getElementById("bookings-next");
+    const bookingsPageLabel = document.getElementById("bookings-page-label");
+
+    const BOOKINGS_PAGE_SIZE = 12;
+    let bookingsPage = 0;
+    let bookingsTotalPages = 1;
+    let currentAdminUser = null;
+
+    function escHtml(s) {
+        return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+
+    function formatTime(t) {
+        if (t == null) return "—";
+        if (typeof t === "string") return t.length >= 5 ? t.slice(0, 5) : t;
+        if (Array.isArray(t) && t.length >= 2) {
+            const h = String(t[0]).padStart(2, "0");
+            const m = String(t[1]).padStart(2, "0");
+            return h + ":" + m;
+        }
+        return String(t);
+    }
+
+    function statusBadgeClass(status) {
+        const s = (status || "").toUpperCase();
+        if (s === "PENDING") return "admin-booking-status--pending";
+        if (s === "APPROVED") return "admin-booking-status--approved";
+        if (s === "REJECTED") return "admin-booking-status--rejected";
+        if (s === "CANCELLED") return "admin-booking-status--cancelled";
+        return "";
+    }
+
+    function buildSearchUrl(page) {
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("size", String(BOOKINGS_PAGE_SIZE));
+        const st = bookingsFilter.value;
+        if (st) params.set("status", st);
+        return "/api/bookings/search?" + params.toString();
+    }
+
+    async function loadBookings(page) {
+        bookingsStatusEl.textContent = "Loading…";
+        bookingsTbody.innerHTML = "";
+        try {
+            const res = await fetch(buildSearchUrl(page));
+            if (!res.ok) {
+                const t = await res.text();
+                throw new Error(t || "Failed to load bookings");
+            }
+            const data = await res.json();
+            const rows = Array.isArray(data.content) ? data.content : [];
+            bookingsPage = typeof data.currentPage === "number" ? data.currentPage : page;
+            bookingsTotalPages = Math.max(1, typeof data.totalPages === "number" ? data.totalPages : 1);
+
+            if (rows.length === 0) {
+                bookingsTbody.innerHTML = '<tr><td colspan="8" class="admin-bookings-empty">No bookings match this filter.</td></tr>';
+            } else {
+                bookingsTbody.innerHTML = rows.map((b) => {
+                    const pending = (b.status || "").toUpperCase() === "PENDING";
+                    const actions = pending
+                        ? `<button type="button" class="admin-booking-approve" data-id="${b.id}">Approve</button> ` +
+                          `<button type="button" class="admin-booking-reject" data-id="${b.id}">Reject</button>`
+                        : "—";
+                    const rej = b.rejectionReason ? `<div class="admin-booking-reason">${escHtml(b.rejectionReason)}</div>` : "";
+                    return `<tr>
+                        <td>${b.id}</td>
+                        <td>${escHtml(b.bookingDate)}</td>
+                        <td>${escHtml(formatTime(b.startTime))}–${escHtml(formatTime(b.endTime))}</td>
+                        <td>${escHtml(b.resourceName || "")}<div class="admin-booking-sub">${escHtml(b.resourceLocation || "")}</div></td>
+                        <td>${escHtml(b.userName || b.userEmail || "")}<div class="admin-booking-sub">${escHtml(b.userEmail || "")}</div></td>
+                        <td class="admin-booking-purpose">${escHtml(b.purpose || "")}</td>
+                        <td><span class="admin-booking-status ${statusBadgeClass(b.status)}">${escHtml(b.status || "")}</span>${rej}</td>
+                        <td class="admin-booking-actions">${actions}</td>
+                    </tr>`;
+                }).join("");
+            }
+
+            bookingsPagination.hidden = bookingsTotalPages <= 1;
+            bookingsPageLabel.textContent = `Page ${bookingsPage + 1} of ${bookingsTotalPages}`;
+            bookingsPrev.disabled = bookingsPage <= 0;
+            bookingsNext.disabled = bookingsPage >= bookingsTotalPages - 1;
+            bookingsStatusEl.textContent = rows.length ? `Showing ${rows.length} row(s).` : "";
+
+            bookingsTbody.querySelectorAll(".admin-booking-approve").forEach((btn) => {
+                btn.addEventListener("click", () => updateBookingStatus(Number(btn.dataset.id), "APPROVED", null));
+            });
+            bookingsTbody.querySelectorAll(".admin-booking-reject").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const reason = window.prompt("Rejection reason (required for the requester):");
+                    if (reason == null) return;
+                    const trimmed = reason.trim();
+                    if (!trimmed) {
+                        window.alert("A rejection reason is required.");
+                        return;
+                    }
+                    updateBookingStatus(Number(btn.dataset.id), "REJECTED", trimmed);
+                });
+            });
+        } catch (e) {
+            bookingsStatusEl.textContent = e.message || "Could not load bookings.";
+        }
+    }
+
+    async function updateBookingStatus(id, status, reason) {
+        const email = currentAdminUser && currentAdminUser.email ? currentAdminUser.email : "admin@campus.com";
+        bookingsStatusEl.textContent = "Updating…";
+        try {
+            const body = { status };
+            if (reason) body.reason = reason;
+            const res = await fetch("/api/bookings/" + encodeURIComponent(id) + "/status", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-User-Email": email
+                },
+                body: JSON.stringify(body)
+            });
+            const raw = await res.text();
+            if (!res.ok) {
+                let msg = raw || "Update failed";
+                try {
+                    const j = JSON.parse(raw);
+                    if (j.message) msg = j.message;
+                } catch (_) {}
+                throw new Error(msg);
+            }
+            bookingsStatusEl.textContent = "Booking updated.";
+            await loadBookings(bookingsPage);
+        } catch (e) {
+            bookingsStatusEl.textContent = e.message || "Update failed.";
+        }
+    }
+
+    const userRaw = localStorage.getItem("smartCampusUser");
+
+    if (userRaw) {
+        try {
+            const user = JSON.parse(userRaw);
+            if (user.role !== "ADMIN") {
+                window.location.href = "/";
+            }
+            currentAdminUser = user;
+            loadBookings(0);
+            bookingsFilter.addEventListener("change", () => loadBookings(0));
+            bookingsRefreshBtn.addEventListener("click", () => loadBookings(bookingsPage));
+            bookingsPrev.addEventListener("click", () => {
+                if (bookingsPage > 0) loadBookings(bookingsPage - 1);
+            });
+            bookingsNext.addEventListener("click", () => {
+                if (bookingsPage < bookingsTotalPages - 1) loadBookings(bookingsPage + 1);
+            });
+        } catch (_) {
+            localStorage.removeItem("smartCampusUser");
+            if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
+                window.SmartCampusResourceApi.clearCredentials();
+            }
+            window.location.href = "/login.html";
+        }
+    } else {
+        window.location.href = "/login.html";
+    }
+
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>

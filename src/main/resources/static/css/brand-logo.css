@@ -1,0 +1,87 @@
+/* Campus Nexus logo + name — include after page nav styles */
+
+.top-nav .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+a.brand,
+a.auth-brand-bar,
+a.admin-top-bar-brand-wrap {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+a.brand:hover,
+a.auth-brand-bar:hover,
+a.admin-top-bar-brand-wrap:hover {
+  opacity: 0.9;
+}
+
+a.brand:focus-visible,
+a.auth-brand-bar:focus-visible,
+a.admin-top-bar-brand-wrap:focus-visible {
+  outline: 2px solid var(--gold2, #f0c96d);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: block;
+}
+
+.brand-text {
+  line-height: 1.2;
+}
+
+/* Admin top bar */
+.admin-top-bar-brand-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-brand-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Login (no top-nav) */
+.auth-brand-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 24px 20px 8px;
+  font-family: var(--ff-display, "Playfair Display", Georgia, serif);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--gold2, #f0c96d);
+}
+
+.auth-brand-bar .brand-logo {
+  width: 44px;
+  height: 44px;
+}
+
+@media (max-width: 768px) {
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+  }
+  .admin-brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+}

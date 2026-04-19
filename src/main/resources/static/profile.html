@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/profile.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/notification-bell.css">
+</head>
+<body class="with-shared-header">
+<div id="site-header-mount"></div>
+
+<main class="container profile-page">
+    <section class="card profile-card">
+        <h2>My Profile</h2>
+        <p class="subtitle">Logged in user details</p>
+
+        <div class="profile-card__body">
+            <div class="profile-card__column profile-card__column--details">
+                <div id="profile-details" class="grid profile-grid"></div>
+                <p id="profile-status" class="status-text"></p>
+
+                <div class="actions">
+                    <button id="edit-profile-btn" type="button">Edit Profile</button>
+                    <button id="save-profile-btn" type="button" class="hidden">Update Profile</button>
+                    <a class="btn-secondary" href="/">Back to Home</a>
+                    <button id="logout-btn" type="button">Log Out</button>
+                </div>
+            </div>
+
+            <div class="profile-card__column profile-card__column--photo">
+                <div class="profile-avatar-top">
+                    <div class="profile-avatar-wrap">
+                        <img id="profile-preview" class="profile-avatar" src="https://via.placeholder.com/140?text=Profile" alt="Profile image">
+                        <button id="avatar-edit-btn" class="avatar-edit-btn" type="button" aria-label="Update profile image">&#9998;</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card settings-card">
+        <h2>System Settings</h2>
+        <p class="subtitle">These settings apply across all pages in the system.</p>
+        <p class="settings-kbd-hint" id="settings-kbd-hint" hidden></p>
+
+        <div class="grid">
+            <label>Theme
+                <select id="theme-setting">
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                </select>
+            </label>
+
+            <label>Font Size
+                <select id="font-size-setting">
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                </select>
+            </label>
+
+            <label>Font Style
+                <select id="font-style-setting">
+                    <option value="dmSans">DM Sans</option>
+                    <option value="inter">Inter</option>
+                    <option value="serif">Serif</option>
+                    <option value="system">System UI</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="actions">
+            <button id="save-settings-btn" type="button">Save Settings</button>
+            <button id="backup-settings-btn" type="button">Backup</button>
+            <button id="restore-settings-btn" type="button" class="btn-secondary">Restore</button>
+            <input id="restore-file-input" class="hidden" type="file" accept=".json,application/json">
+        </div>
+        <p id="settings-status" class="status-text"></p>
+    </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+    const profileDetails = document.getElementById("profile-details");
+    const profileStatus = document.getElementById("profile-status");
+    let currentUser = null;
+
+    function navHomeEl() {
+        return document.querySelector("header.top-nav nav > a[href='/']");
+    }
+
+    function navResourcesEl() {
+        return document.querySelector("header.top-nav nav > a[href='/resource.html']");
+    }
+
+    function syncAccountLinkFromUser(user) {
+        const accountLink = document.getElementById("account-link");
+        if (!accountLink || !user) {
+            return;
+        }
+        const navAvatarSrc =
+            user.profileImageData && user.profileImageData.startsWith("data:")
+                ? user.profileImageData
+                : "https://via.placeholder.com/24?text=P";
+        accountLink.innerHTML =
+            '<img class="nav-cta-avatar" src="' +
+            navAvatarSrc +
+            '" alt="" width="24" height="24" decoding="async">My Profile';
+        accountLink.href = "/profile.html";
+    }
+
+    function initNavForRole() {
+        const raw = localStorage.getItem("smartCampusUser");
+        const navHomeLink = navHomeEl();
+        const navResourcesLink = navResourcesEl();
+        const navTechDashboardLink = document.getElementById("nav-tech-dashboard-link");
+        if (!raw || !navHomeLink) {
+            return;
+        }
+        try {
+            const u = JSON.parse(raw);
+            if (u.role === "ADMIN") {
+                navHomeLink.href = "/admin.html";
+                navHomeLink.textContent = "Dashboard";
+                if (navResourcesLink) {
+                    navResourcesLink.style.display = "none";
+                }
+            }
+            if (u.role === "TECHNICIAN") {
+                navHomeLink.style.display = "none";
+                if (navResourcesLink) {
+                    navResourcesLink.style.display = "none";
+                }
+                if (navTechDashboardLink) {
+                    navTechDashboardLink.style.display = "";
+                }
+            }
+            var ticketLink = document.querySelector("header.top-nav nav > a[href='/ticket.html']");
+            var notifyWrap = document.getElementById("nav-notify-wrap");
+            var isTech = u.role === "TECHNICIAN";
+            if (ticketLink) {
+                ticketLink.style.display = isTech ? "none" : "";
+            }
+            if (notifyWrap) {
+                notifyWrap.style.display = isTech ? "none" : "";
+            }
+        } catch (_) {
+        }
+    }
+
+    document.addEventListener("siteheaderloaded", function () {
+        initNavForRole();
+        if (currentUser) {
+            syncAccountLinkFromUser(currentUser);
+        }
+    });
+    const avatarEditBtn = document.getElementById("avatar-edit-btn");
+    const editProfileBtn = document.getElementById("edit-profile-btn");
+    const saveProfileBtn = document.getElementById("save-profile-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    const themeSetting = document.getElementById("theme-setting");
+    const fontSizeSetting = document.getElementById("font-size-setting");
+    const fontStyleSetting = document.getElementById("font-style-setting");
+    const saveSettingsBtn = document.getElementById("save-settings-btn");
+    const backupSettingsBtn = document.getElementById("backup-settings-btn");
+    const restoreSettingsBtn = document.getElementById("restore-settings-btn");
+    const restoreFileInput = document.getElementById("restore-file-input");
+    const settingsStatus = document.getElementById("settings-status");
+    let isEditMode = false;
+
+    async function fetchProfileFromDatabase(user) {
+        const uid = user.userId;
+        if (uid == null || uid === 0) {
+            return user;
+        }
+        try {
+            const res = await fetch(`/api/users/${uid}`);
+            if (!res.ok) {
+                return user;
+            }
+            const p = await res.json();
+            return {
+                ...user,
+                userId: p.userId,
+                firstName: p.firstName ?? "",
+                lastName: p.lastName ?? "",
+                fullName: p.fullName,
+                email: p.email,
+                contactNumber: p.contactNumber ?? "",
+                address: p.address ?? "",
+                profileImageData: p.profileImageData
+            };
+        } catch (_) {
+            return user;
+        }
+    }
+
+    function escAttr(value) {
+        return String(value ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+
+    function renderProfileUi(user) {
+        syncAccountLinkFromUser(user);
+        const nameParts = (user.fullName || "").trim().split(/\s+/).filter(Boolean);
+        const firstName = user.firstName || nameParts[0] || "";
+        const lastName = user.lastName || nameParts.slice(1).join(" ") || "";
+        profileDetails.innerHTML = `
+                <label>User ID
+                    <input type="text" value="${escAttr(user.userId)}" readonly>
+                </label>
+                <label>First Name
+                    <input id="first-name" class="editable-field" type="text" value="${escAttr(firstName)}" disabled>
+                </label>
+                <label>Last Name
+                    <input id="last-name" class="editable-field" type="text" value="${escAttr(lastName)}" disabled>
+                </label>
+                <label>Email
+                    <input type="text" value="${escAttr(user.email)}" readonly>
+                </label>
+                <label>Contact Number
+                    <input id="contact-number" class="editable-field" type="tel" value="${escAttr(user.contactNumber)}" placeholder="+94 77 123 4567" disabled>
+                </label>
+                <label>Address
+                    <input id="address" class="editable-field" type="text" value="${escAttr(user.address)}" placeholder="Enter your address" disabled>
+                </label>
+                <label>Profile Image
+                    <input id="profile-image-file" class="hidden" type="file" accept="image/*">
+                </label>
+            `;
+        const profilePreview = document.getElementById("profile-preview");
+        const imgSrc =
+            user.profileImageData && user.profileImageData.startsWith("data:")
+                ? user.profileImageData
+                : "https://via.placeholder.com/140?text=Profile";
+        profilePreview.src = imgSrc;
+        delete profilePreview.dataset.uploadedImage;
+
+        const profileImageInput = document.getElementById("profile-image-file");
+        avatarEditBtn.onclick = () => profileImageInput.click();
+        profileImageInput.onchange = () => {
+            const file = profileImageInput.files && profileImageInput.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const imageData = event.target && event.target.result ? String(event.target.result) : "";
+                profilePreview.src = imageData || "https://via.placeholder.com/120?text=Profile";
+                profilePreview.dataset.uploadedImage = imageData;
+                currentUser = { ...currentUser, profileImageData: imageData };
+                localStorage.setItem("smartCampusUser", JSON.stringify(currentUser));
+                syncAccountLinkFromUser(currentUser);
+                profileStatus.textContent = "Image ready — click Update Profile to save to the database.";
+            };
+            reader.readAsDataURL(file);
+        };
+        setEditMode(false);
+    }
+
+    function setEditMode(enabled) {
+        isEditMode = enabled;
+        const editableInputs = profileDetails.querySelectorAll(".editable-field");
+        editableInputs.forEach((input) => {
+            input.disabled = !enabled;
+        });
+        saveProfileBtn.classList.toggle("hidden", !enabled);
+        editProfileBtn.classList.toggle("hidden", enabled);
+    }
+
+    const userRaw = localStorage.getItem("smartCampusUser");
+    if (!userRaw) {
+        profileStatus.textContent = "You are not signed in.";
+        avatarEditBtn.disabled = true;
+        editProfileBtn.disabled = true;
+        saveProfileBtn.disabled = true;
+    } else {
+        (async () => {
+            try {
+                let user = JSON.parse(userRaw);
+                user = await fetchProfileFromDatabase(user);
+                currentUser = user;
+                localStorage.setItem("smartCampusUser", JSON.stringify(user));
+                renderProfileUi(user);
+                profileStatus.textContent = "Profile loaded from database.";
+            } catch (_) {
+                localStorage.removeItem("smartCampusUser");
+                if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
+                    window.SmartCampusResourceApi.clearCredentials();
+                }
+                profileStatus.textContent = "Session invalid. Please sign in again.";
+                avatarEditBtn.disabled = true;
+                editProfileBtn.disabled = true;
+                saveProfileBtn.disabled = true;
+            }
+        })();
+    }
+
+    editProfileBtn.addEventListener("click", () => {
+        if (!currentUser) {
+            return;
+        }
+        setEditMode(true);
+        profileStatus.textContent = "Edit mode enabled.";
+    });
+
+    saveProfileBtn.addEventListener("click", async () => {
+        if (!currentUser || !isEditMode) {
+            return;
+        }
+
+        const firstName = document.getElementById("first-name").value.trim();
+        const lastName = document.getElementById("last-name").value.trim();
+        const fullName = `${firstName} ${lastName}`.trim();
+        const contactNumber = document.getElementById("contact-number").value.trim();
+        const address = document.getElementById("address").value.trim();
+        const profilePreview = document.getElementById("profile-preview");
+        let imagePayload = null;
+        if (profilePreview.dataset.uploadedImage && profilePreview.dataset.uploadedImage.startsWith("data:")) {
+            imagePayload = profilePreview.dataset.uploadedImage;
+        } else if (currentUser.profileImageData && currentUser.profileImageData.startsWith("data:")) {
+            imagePayload = currentUser.profileImageData;
+        }
+
+        const uid = currentUser.userId;
+        const isDbUser = uid != null && uid !== 0;
+
+        if (isDbUser) {
+            profileStatus.textContent = "Saving to database...";
+            try {
+                const res = await fetch(`/api/users/${uid}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        firstName,
+                        lastName,
+                        contactNumber,
+                        address,
+                        profileImageData: imagePayload
+                    })
+                });
+                const body = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(body.message || "Could not save profile");
+                }
+                currentUser = {
+                    ...currentUser,
+                    userId: body.userId,
+                    firstName: body.firstName,
+                    lastName: body.lastName,
+                    fullName: body.fullName,
+                    email: body.email,
+                    contactNumber: body.contactNumber ?? "",
+                    address: body.address ?? "",
+                    profileImageData: body.profileImageData
+                };
+                localStorage.setItem("smartCampusUser", JSON.stringify(currentUser));
+                renderProfileUi(currentUser);
+                profileStatus.textContent = "Profile saved to the database (check phpMyAdmin → app_users).";
+                return;
+            } catch (err) {
+                profileStatus.textContent = err.message || "Save failed.";
+                return;
+            }
+        }
+
+        const updatedUser = {
+            ...currentUser,
+            firstName,
+            lastName,
+            fullName,
+            contactNumber,
+            address,
+            profileImageData: imagePayload || currentUser.profileImageData
+        };
+        localStorage.setItem("smartCampusUser", JSON.stringify(updatedUser));
+        currentUser = updatedUser;
+        renderProfileUi(currentUser);
+        profileStatus.textContent = "Profile updated (local session only).";
+    });
+
+    logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("smartCampusUser");
+        if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
+            window.SmartCampusResourceApi.clearCredentials();
+        }
+        window.location.href = "/login.html";
+    });
+
+    const settingsApi = window.SmartCampusSettings;
+    if (settingsApi) {
+        const currentSettings = settingsApi.load();
+        themeSetting.value = currentSettings.theme;
+        fontSizeSetting.value = currentSettings.fontSize;
+        fontStyleSetting.value = currentSettings.fontStyle;
+    }
+
+    function runSaveSettings() {
+        const settingsApiInner = window.SmartCampusSettings;
+        if (!settingsApiInner) {
+            settingsStatus.textContent = "Settings service is unavailable.";
+            return;
+        }
+        settingsApiInner.save({
+            theme: themeSetting.value,
+            fontSize: fontSizeSetting.value,
+            fontStyle: fontStyleSetting.value
+        });
+        settingsStatus.textContent = "Settings saved and applied system-wide.";
+    }
+
+    saveSettingsBtn.addEventListener("click", () => runSaveSettings());
+
+    (function initSettingsShortcutHint() {
+        const hintEl = document.getElementById("settings-kbd-hint");
+        const plat = window.SmartCampusPlatform;
+        if (!hintEl || !plat) {
+            return;
+        }
+        const seq = plat.formatShortcut(["S"]);
+        const parts = seq.split("+").map((p) => "<kbd>" + p + "</kbd>");
+        hintEl.innerHTML = "Tip: Press " + parts.join(" + ") + " to save system settings.";
+        hintEl.hidden = false;
+    })();
+
+    document.addEventListener("keydown", (e) => {
+        if (!e.ctrlKey && !e.metaKey) {
+            return;
+        }
+        if (String(e.key).toLowerCase() !== "s") {
+            return;
+        }
+        const t = e.target;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) {
+            return;
+        }
+        e.preventDefault();
+        runSaveSettings();
+    });
+
+    backupSettingsBtn.addEventListener("click", () => {
+        const payload = {
+            smartCampusUser: localStorage.getItem("smartCampusUser"),
+            smartCampusSettings: localStorage.getItem("smartCampusSettings"),
+            exportedAt: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const downloadUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = downloadUrl;
+        anchor.download = "campus-nexus-backup.json";
+        anchor.click();
+        URL.revokeObjectURL(downloadUrl);
+        settingsStatus.textContent = "Backup downloaded successfully.";
+    });
+
+    restoreSettingsBtn.addEventListener("click", () => {
+        restoreFileInput.click();
+    });
+
+    restoreFileInput.addEventListener("change", () => {
+        const file = restoreFileInput.files && restoreFileInput.files[0];
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const parsed = JSON.parse(String(event.target && event.target.result ? event.target.result : "{}"));
+                if (typeof parsed.smartCampusUser === "string") {
+                    localStorage.setItem("smartCampusUser", parsed.smartCampusUser);
+                }
+                if (typeof parsed.smartCampusSettings === "string") {
+                    localStorage.setItem("smartCampusSettings", parsed.smartCampusSettings);
+                    const settingsApiInner = window.SmartCampusSettings;
+                    if (settingsApiInner) {
+                        const restoredSettings = settingsApiInner.load();
+                        settingsApiInner.apply(restoredSettings);
+                        themeSetting.value = restoredSettings.theme;
+                        fontSizeSetting.value = restoredSettings.fontSize;
+                        fontStyleSetting.value = restoredSettings.fontStyle;
+                    }
+                }
+                settingsStatus.textContent = "Restore completed. Reloading...";
+                setTimeout(() => window.location.reload(), 600);
+            } catch (_) {
+                settingsStatus.textContent = "Invalid backup file. Please select a valid JSON backup.";
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+<script src="/js/header-loader.js"></script>
+<script>
+ (function loadProfileNotificationBell() {
+        function appendBell() {
+            var s = document.createElement("script");
+            s.src = "/js/notification-bell.js";
+            document.body.appendChild(s);
+        }
+        try {
+            var raw = localStorage.getItem("smartCampusUser");
+            if (!raw) {
+                appendBell();
+                return;
+            }
+            if (JSON.parse(raw).role !== "TECHNICIAN") {
+                appendBell();
+            }
+        } catch (_) {
+            appendBell();
+        }
+    })();
+</script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>
