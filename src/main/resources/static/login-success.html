@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signing you in | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+</head>
+<body>
+<main class="container" style="padding-top:60px;">
+    <section class="card" style="max-width:520px;margin:0 auto;">
+        <h1>Signing you in...</h1>
+        <p id="status-text">Finalizing your account.</p>
+    </section>
+</main>
+<script>
+    (async function () {
+        const statusText = document.getElementById("status-text");
+        const next = sessionStorage.getItem("smartCampusNextUrl") || "/resource.html";
+        try {
+            const response = await fetch("/api/auth/me", { credentials: "include" });
+            if (!response.ok) throw new Error("Unable to read signed-in user");
+            const user = await response.json();
+            localStorage.setItem("smartCampusUser", JSON.stringify(user));
+            sessionStorage.removeItem("smartCampusNextUrl");
+            statusText.textContent = "Sign-in successful. Redirecting...";
+            window.location.replace(next);
+        } catch (error) {
+            statusText.textContent = "Sign-in completed, but we could not load your account. Please try again.";
+            console.error(error);
+        }
+    })();
+</script>
+</body>
+</html>
