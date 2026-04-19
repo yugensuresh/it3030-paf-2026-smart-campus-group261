@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Resources | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/resource.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/notification-bell.css">
+</head>
+<body class="with-shared-header">
+<div id="site-header-mount"></div>
+
+<main class="container">
+    <section class="card">
+        <h1>Admin Resource View</h1>
+        <p class="resource-browse-intro">You are signed in as an administrator. Resource browsing is available below while full admin editing screens are being finalized.</p>
+        <div class="actions">
+            <a class="button" href="/resource.html">Open User Resource View</a>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Available resources</h2>
+        <p id="status-text"></p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Capacity</th>
+                    <th>WiFi</th>
+                    <th>AC</th>
+                    <th>Book</th>
+                </tr>
+                </thead>
+                <tbody id="resource-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+    fetch("/footer.html").then((response) => response.ok ? response.text() : "").then((html) => {
+        const mount = document.getElementById("site-footer");
+        if (mount) mount.innerHTML = html;
+    }).catch(() => {});
+</script>
+<script src="/js/header-loader.js"></script>
+<script src="/js/notification-bell.js"></script>
+<script src="/app.js"></script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>
