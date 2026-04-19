@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a resource | Campus Nexus</title>
+    <script src="/app-settings.js"></script>
+    <link rel="stylesheet" href="/css/campus-nexus-theme.css">
+    <link rel="stylesheet" href="/css/resource.css">
+    <link rel="stylesheet" href="/css/brand-logo.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/nav-highlight.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/notification-bell.css">
+</head>
+<body class="with-shared-header">
+<div id="site-header-mount"></div>
+
+<main class="container">
+    <h1>Book a resource</h1>
+    <p class="resource-browse-intro">Submit a reservation request. Bookings are pending until an administrator approves them.</p>
+
+    <section class="card" id="book-card">
+        <h2 id="book-resource-title">Loading…</h2>
+        <p id="book-resource-meta" class="resource-browse-intro"></p>
+        <p id="book-status" class="status-text"></p>
+
+        <form id="book-form" class="hidden">
+            <div class="grid">
+                <label>Date
+                    <input id="book-date" type="date" required>
+                </label>
+                <label>Start time
+                    <input id="book-start" type="time" required>
+                </label>
+                <label>End time
+                    <input id="book-end" type="time" required>
+                </label>
+                <label>Expected attendees (optional)
+                    <input id="book-attendees" type="number" min="1" placeholder="e.g. 12">
+                </label>
+            </div>
+            <label style="margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:14px;">
+                Purpose (min 5 characters)
+                <textarea id="book-purpose" rows="4" minlength="5" maxlength="500" required placeholder="Describe how you will use this space or equipment"></textarea>
+            </label>
+            <div class="actions">
+                <button type="submit">Submit booking request</button>
+                <a class="resource-back-link" href="/resource.html">Back to resources</a>
+            </div>
+        </form>
+    </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script>
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const resourceIdRaw = params.get("resourceId");
+        const resourceId = resourceIdRaw != null && resourceIdRaw !== "" ? Number(resourceIdRaw) : NaN;
+
+        const titleEl = document.getElementById("book-resource-title");
+        const metaEl = document.getElementById("book-resource-meta");
+        const statusEl = document.getElementById("book-status");
+        const formEl = document.getElementById("book-form");
+        const dateInput = document.getElementById("book-date");
+
+        function todayLocalIso() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${y}-${m}-${day}`;
+        }
+
+        function requireLogin() {
+            const next = "/book.html?resourceId=" + encodeURIComponent(String(resourceId));
+            window.location.href = "/login.html?next=" + encodeURIComponent(next);
+        }
+
+        function getCurrentUser() {
+            try {
+                const raw = localStorage.getItem("smartCampusUser");
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch {
+                return null;
+            }
+        }
+
+        if (!Number.isFinite(resourceId) || resourceId < 1) {
+            titleEl.textContent = "Missing resource";
+            metaEl.textContent = "Open this page from the resources list using a Book link.";
+            return;
+        }
+
+        const user = getCurrentUser();
+        if (!user || user.userId == null || user.userId === 0) {
+            requireLogin();
+            return;
+        }
+
+        dateInput.min = todayLocalIso();
+        dateInput.value = todayLocalIso();
+
+        fetch("/api/resources/" + encodeURIComponent(resourceId))
+            .then((r) => {
+                if (!r.ok) throw new Error("Resource not found");
+                return r.json();
+            })
+            .then((r) => {
+                if (r.status && r.status !== "ACTIVE") {
+                    titleEl.textContent = r.name || "Resource";
+                    metaEl.textContent = "This resource is not available for booking (status: " + r.status + ").";
+                    return;
+                }
+                titleEl.textContent = r.name || "Resource";
+                const parts = [];
+                if (r.type) parts.push(r.type.replace(/_/g, " "));
+                if (r.location) parts.push(r.location);
+                if (r.capacity != null) parts.push("Capacity " + r.capacity);
+                metaEl.textContent = parts.join(" · ");
+                formEl.classList.remove("hidden");
+            })
+            .catch(() => {
+                titleEl.textContent = "Resource unavailable";
+                metaEl.textContent = "We could not load this resource. Return to the list and try again.";
+            });
+
+        function normalizeTimeForApi(value) {
+            if (!value) return null;
+            return value.length === 5 ? value + ":00" : value;
+        }
+
+        formEl.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            statusEl.textContent = "Submitting…";
+            const purpose = document.getElementById("book-purpose").value.trim();
+            if (purpose.length < 5) {
+                statusEl.textContent = "Purpose must be at least 5 characters.";
+                return;
+            }
+            const attendeesRaw = document.getElementById("book-attendees").value.trim();
+            const payload = {
+                userId: user.userId,
+                resourceId: resourceId,
+                bookingDate: document.getElementById("book-date").value,
+                startTime: normalizeTimeForApi(document.getElementById("book-start").value),
+                endTime: normalizeTimeForApi(document.getElementById("book-end").value),
+                purpose: purpose
+            };
+            if (attendeesRaw !== "") {
+                const n = Number(attendeesRaw);
+                if (Number.isFinite(n)) payload.expectedAttendees = n;
+            }
+            try {
+                const res = await fetch("/api/bookings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const bodyText = await res.text();
+                if (!res.ok) {
+                    let msg = "Booking failed";
+                    if (bodyText) {
+                        try {
+                            const err = JSON.parse(bodyText);
+                            if (err.message) msg = err.message;
+                        } catch {
+                            msg = bodyText;
+                        }
+                    }
+                    statusEl.textContent = msg;
+                    return;
+                }
+                statusEl.textContent = "Request submitted. You will be notified when it is reviewed.";
+                formEl.reset();
+                dateInput.value = todayLocalIso();
+            } catch {
+                statusEl.textContent = "Network error. Try again.";
+            }
+        });
+    })();
+</script>
+<script>
+    fetch("/footer.html")
+        .then((response) => response.ok ? response.text() : "")
+        .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+        })
+        .catch(() => {});
+</script>
+<script src="/js/header-loader.js"></script>
+<script src="/js/notification-bell.js"></script>
+<script src="/nav-highlight.js"></script>
+</body>
+</html>
