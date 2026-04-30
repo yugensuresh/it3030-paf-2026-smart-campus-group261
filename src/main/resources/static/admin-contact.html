@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact us management | Admin</title>
+    <title>Contact us management | Campus Orbit Admin</title>
+
     <script src="/app-settings.js"></script>
     <script>
         (function enforceAdmin() {
@@ -21,20 +22,442 @@
             }
         })();
     </script>
+
     <link rel="stylesheet" href="/css/campus-nexus-theme.css">
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/brand-logo.css">
     <link rel="stylesheet" href="/css/admin-contact.css">
     <link rel="stylesheet" href="/css/nav-highlight.css">
     <link rel="stylesheet" href="/css/footer.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --admin-primary: #1d4ed8;
+            --admin-primary-dark: #0f2f6b;
+            --admin-teal: #2563eb;
+            --admin-teal-soft: #eff6ff;
+            --admin-card: rgba(255, 255, 255, 0.92);
+            --admin-text: #1e293b;
+            --admin-muted: #64748b;
+            --admin-border: #dbe7f5;
+            --admin-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+        }
+
+        body.admin-contact-page {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--admin-text);
+            background:
+                    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 28%),
+                    radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.10), transparent 30%),
+                    linear-gradient(135deg, #f8fbfd 0%, #eef6ff 48%, #f6f9fc 100%);
+            overflow-x: hidden;
+        }
+
+        body.admin-contact-page::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.35) 1px, transparent 1px);
+            background-size: 42px 42px;
+            pointer-events: none;
+            opacity: 0.45;
+            z-index: 0;
+        }
+
+        .admin-app {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+        }
+
+        .admin-sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 22px 18px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(18px);
+            border-right: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 12px 0 40px rgba(15, 23, 42, 0.04);
+        }
+
+        .admin-sidebar-title {
+            margin: 0 0 22px;
+            padding: 16px 18px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, var(--admin-primary-dark), var(--admin-teal));
+            color: #ffffff;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            box-shadow: 0 16px 35px rgba(37, 99, 235, 0.22);
+        }
+
+        .admin-sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .admin-sidebar-link,
+        .admin-sidebar-summary,
+        .admin-sidebar-sublink {
+            display: flex;
+            align-items: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--admin-text);
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid transparent;
+            transition: all 0.22s ease;
+            cursor: pointer;
+        }
+
+        .admin-sidebar-link:hover,
+        .admin-sidebar-summary:hover,
+        .admin-sidebar-sublink:hover {
+            transform: translateX(4px);
+            color: var(--admin-primary);
+            background: #f8fbff;
+            border-color: #dce9f1;
+        }
+
+        .admin-sidebar-link[href="/admin-contact.html"] {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.16);
+        }
+
+        .admin-sidebar-details summary {
+            list-style: none;
+        }
+
+        .admin-sidebar-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .admin-sidebar-summary {
+            justify-content: space-between;
+        }
+
+        .admin-sidebar-summary::after {
+            content: "⌄";
+            font-size: 18px;
+            color: var(--admin-teal);
+            font-weight: 900;
+        }
+
+        .admin-sidebar-details[open] .admin-sidebar-summary::after {
+            content: "⌃";
+        }
+
+        .admin-sidebar-dropdown-panel {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 18px;
+            background: rgba(239, 246, 255, 0.9);
+            border: 1px solid var(--admin-border);
+        }
+
+        .admin-sidebar-sublink {
+            min-height: 42px;
+            padding-left: 20px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .admin-content {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            min-height: 86px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 18px 34px;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .admin-top-bar-brand-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .admin-brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            object-fit: contain;
+        }
+
+        .admin-top-bar-brand {
+            color: var(--admin-primary-dark);
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .admin-top-bar-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0 22px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--admin-primary);
+            background: #ffffff;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+            transition: all 0.22s ease;
+        }
+
+        .admin-top-bar-link:hover {
+            transform: translateY(-2px);
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            border-color: transparent;
+        }
+
+        .admin-main-scroll {
+            flex: 1;
+            padding: 32px;
+        }
+
+        .admin-page-inner {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 26px;
+        }
+
+        .admin-contact-hero {
+            position: relative;
+            overflow: hidden;
+            padding: 42px 46px;
+            border-radius: 34px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(239, 246, 255, 0.92));
+            border: 1px solid rgba(255, 255, 255, 0.96);
+            box-shadow: var(--admin-shadow);
+        }
+
+        .admin-contact-hero::after {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            right: -80px;
+            top: -70px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.14), rgba(37, 99, 235, 0.05));
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 0 16px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            background: var(--admin-teal-soft);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .admin-contact-hero h1 {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            color: var(--admin-primary-dark);
+            font-size: 46px;
+            line-height: 1.05;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .subtitle {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 16px 0 0;
+            color: var(--admin-muted);
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        .card {
+            background: var(--admin-card);
+            border: 1px solid rgba(255, 255, 255, 0.96);
+            border-radius: 34px;
+            padding: 36px 42px;
+            box-shadow: var(--admin-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .admin-contact-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-contact-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 6px;
+            background: linear-gradient(180deg, var(--admin-primary), var(--admin-teal));
+        }
+
+        .card h2 {
+            margin: 0 0 18px;
+            color: var(--admin-primary-dark);
+            font-size: 30px;
+            line-height: 1.1;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .admin-contact-placeholder {
+            margin: 0;
+            max-width: 780px;
+            padding: 22px 24px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #f9fcfd, #f2f9f8);
+            border: 1px solid var(--admin-border);
+            color: var(--admin-muted);
+            font-size: 16px;
+            line-height: 1.7;
+            font-weight: 500;
+        }
+
+        .admin-contact-placeholder::before {
+            content: "Next improvement";
+            display: block;
+            width: fit-content;
+            margin-bottom: 10px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: var(--admin-teal-soft);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        #site-footer {
+            padding: 0 32px 24px;
+        }
+
+        @media (max-width: 1100px) {
+            .admin-app {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-sidebar {
+                position: relative;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.92);
+            }
+
+            .admin-sidebar-nav {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .admin-top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px 20px;
+            }
+
+            .admin-top-bar-link {
+                width: 100%;
+            }
+
+            .admin-main-scroll {
+                padding: 22px 18px;
+            }
+
+            .admin-page-inner {
+                gap: 20px;
+            }
+
+            .admin-contact-hero,
+            .card {
+                padding: 24px 20px;
+                border-radius: 24px;
+            }
+
+            .admin-contact-hero h1 {
+                font-size: 36px;
+            }
+
+            .subtitle {
+                font-size: 15px;
+            }
+
+            .card h2 {
+                font-size: 26px;
+            }
+
+            .admin-sidebar-nav {
+                grid-template-columns: 1fr;
+            }
+
+            #site-footer {
+                padding: 0 18px 18px;
+            }
+        }
+    </style>
 </head>
+
 <body class="admin-contact-page">
 <div class="admin-app">
     <aside class="admin-sidebar">
         <p class="admin-sidebar-title">Management</p>
+
         <nav class="admin-sidebar-nav" aria-label="Management modules">
             <a href="/admin.html" class="admin-sidebar-link">Dashboard</a>
             <a href="/admin-users.html" class="admin-sidebar-link">User management</a>
+
             <details class="admin-sidebar-details">
                 <summary class="admin-sidebar-summary">Resource management</summary>
                 <div class="admin-sidebar-dropdown-panel">
@@ -42,25 +465,30 @@
                     <a href="/admin-add-resource.html" class="admin-sidebar-sublink">Add resource</a>
                 </div>
             </details>
+
             <a href="/admin-bookings.html" class="admin-sidebar-link">Booking management</a>
             <a href="/admin-contact.html" class="admin-sidebar-link">Contact us management</a>
         </nav>
     </aside>
+
     <div class="admin-content">
         <header class="admin-top-bar">
-            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Nexus — Home">
+            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Orbit — Home">
                 <img class="admin-brand-logo" src="/images/campus-nexus-logo.png" width="36" height="36" alt="" decoding="async">
-                <span class="admin-top-bar-brand">Campus Nexus — Admin</span>
+                <span class="admin-top-bar-brand">Campus Orbit — Admin</span>
             </a>
+
             <a href="/profile.html" class="admin-top-bar-link">My Profile</a>
         </header>
+
         <main class="admin-main-scroll">
             <div class="admin-page-inner">
                 <section class="admin-contact-hero">
-                    <p class="eyebrow">CONTACT</p>
+                    <p class="eyebrow">Contact</p>
                     <h1>Contact us management</h1>
-                    <p class="subtitle">Handle messages and enquiries from students and staff.</p>
+                    <p class="subtitle">Handle messages and enquiries from students and staff in one clean admin workspace.</p>
                 </section>
+
                 <section class="card admin-contact-card">
                     <h2>Inquiries</h2>
                     <p class="admin-contact-placeholder">
@@ -69,6 +497,7 @@
                 </section>
             </div>
         </main>
+
         <div id="site-footer"></div>
     </div>
 </div>
@@ -82,6 +511,7 @@
         })
         .catch(() => {});
 </script>
+
 <script src="/nav-highlight.js"></script>
 </body>
 </html>

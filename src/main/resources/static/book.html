@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My bookings | Campus Nexus</title>
+    <title>My bookings | Campus Orbit</title>
+
     <script src="/app-settings.js"></script>
     <link rel="stylesheet" href="/css/campus-nexus-theme.css">
     <link rel="stylesheet" href="/css/resource.css">
@@ -12,7 +13,722 @@
     <link rel="stylesheet" href="/css/nav-highlight.css">
     <link rel="stylesheet" href="/css/footer.css">
     <link rel="stylesheet" href="/css/notification-bell.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body.with-shared-header {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            background:
+                    radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 35%),
+                    radial-gradient(circle at bottom right, rgba(38, 70, 83, 0.24), transparent 35%),
+                    linear-gradient(135deg, #f8fbff 0%, #eef6ff 45%, #f7fbff 100%);
+            color: #1f2937;
+            overflow-x: hidden;
+        }
+
+        body.with-shared-header::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(rgba(255, 255, 255, 0.45) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.45) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none;
+            opacity: 0.45;
+            z-index: 0;
+        }
+
+        #site-header-mount {
+            position: relative;
+            z-index: 9999;
+        }
+
+        #site-footer {
+            position: relative;
+            z-index: 10;
+        }
+
+        .book-page {
+            position: relative;
+            z-index: 1;
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 120px 0 70px;
+            display: grid;
+            gap: 28px;
+        }
+
+        .book-page-header {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.92);
+            border-radius: 30px;
+            padding: 36px 40px;
+            box-shadow:
+                    0 28px 70px rgba(15, 23, 42, 0.13),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(18px);
+        }
+
+        .book-page-title {
+            margin: 0;
+            font-size: 38px;
+            line-height: 1.1;
+            font-weight: 900;
+            letter-spacing: -0.06em;
+            color: #132238;
+        }
+
+        .book-page-lead {
+            margin: 14px 0 0;
+            max-width: 760px;
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.92);
+            border-radius: 30px;
+            padding: 34px 38px;
+            box-shadow:
+                    0 28px 70px rgba(15, 23, 42, 0.13),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(18px);
+            overflow: visible;
+            animation: floatIn 0.55s ease both;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .book-section-heading {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.1;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            color: #132238;
+        }
+
+        .resource-browse-intro {
+            margin: 12px 0 10px;
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .book-resource-name {
+            margin: 8px 0 16px;
+            color: #1e3a8a;
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .status-text {
+            min-height: 22px;
+            margin: 14px 0;
+            color: #3b82f6;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        label {
+            display: grid;
+            gap: 8px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            border-radius: 15px;
+            border: 1px solid #dbe7f5;
+            background: rgba(255, 255, 255, 0.94);
+            color: #111827;
+            padding: 14px 15px;
+            font: inherit;
+            outline: none;
+            transition: 0.25s ease;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+            background: #ffffff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 118px;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input:disabled,
+        select:disabled {
+            background: rgba(241, 245, 249, 0.85);
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button,
+        .resource-book-btn,
+        .resource-back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            border: 0;
+            border-radius: 16px;
+            padding: 13px 18px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            font-size: 14px;
+            font-weight: 900;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 16px 35px rgba(59, 130, 246, 0.22);
+            transition: 0.25s ease;
+            white-space: nowrap;
+        }
+
+        button:hover:not(:disabled),
+        .resource-book-btn:hover,
+        .resource-back-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 42px rgba(59, 130, 246, 0.30);
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        button.secondary,
+        .resource-back-link {
+            color: #1e3a8a;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid #dbe7f5;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .book-page-card--tip {
+            border: 1px solid rgba(59, 130, 246, 0.16);
+            background:
+                    linear-gradient(135deg, rgba(59, 130, 246, 0.10), rgba(255, 255, 255, 0.90));
+        }
+
+        .bookings-panel__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .bookings-result-hint {
+            margin: 0;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.12);
+            color: #1d4ed8;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .bookings-controls {
+            border-radius: 24px;
+            border: 1px solid #dbe7ee;
+            background: rgba(248, 250, 252, 0.76);
+            padding: 20px;
+            margin-bottom: 18px;
+        }
+
+        .bookings-controls__label {
+            margin: 0 0 14px;
+            color: #132238;
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .bookings-toolbar {
+            display: grid;
+            gap: 16px;
+        }
+
+        .bookings-filters {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr 1fr auto;
+            gap: 14px;
+            align-items: end;
+        }
+
+        .bookings-filter-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bookings-search-row {
+            width: 100%;
+        }
+
+        .bookings-search-wrap {
+            position: relative;
+        }
+
+        .bookings-search-input {
+            width: 100%;
+            padding-left: 44px;
+        }
+
+        .bookings-search-wrap::before {
+            content: "⌕";
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #3b82f6;
+            font-size: 20px;
+            font-weight: 900;
+            z-index: 1;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+        }
+
+        .bookings-empty-msg {
+            margin: 16px 0;
+            padding: 22px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.76);
+            border: 1px dashed #c7d7ee;
+            color: #64748b;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .bookings-cards {
+            display: grid;
+            gap: 20px;
+        }
+
+        .booking-detail-card {
+            border-radius: 26px;
+            border: 1px solid #dbe7ee;
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .booking-detail-card__layout {
+            display: grid;
+            grid-template-columns: 126px minmax(0, 1fr);
+            gap: 0;
+        }
+
+        .booking-detail-card__aside {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(23, 50, 77, 0.96), rgba(59, 130, 246, 0.92));
+        }
+
+        .booking-date-badge {
+            width: 88px;
+            min-height: 126px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.96);
+            display: grid;
+            place-items: center;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 18px 32px rgba(15, 23, 42, 0.18);
+        }
+
+        .booking-date-badge__wd,
+        .booking-date-badge__yr {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .booking-date-badge__day {
+            color: #1e3a8a;
+            font-size: 34px;
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .booking-date-badge__mon {
+            color: #3b82f6;
+            font-size: 14px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .booking-detail-card__body {
+            padding: 22px;
+        }
+
+        .booking-detail-card__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .booking-detail-card__title {
+            margin: 0;
+            color: #132238;
+            font-size: 22px;
+            line-height: 1.25;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+        }
+
+        .booking-detail-card__meta {
+            margin: 8px 0 16px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .booking-status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+
+        .booking-status-pill--pending {
+            background: rgba(234, 179, 8, 0.16);
+            color: #a16207;
+        }
+
+        .booking-status-pill--approved {
+            background: rgba(59, 130, 246, 0.14);
+            color: #1d4ed8;
+        }
+
+        .booking-status-pill--rejected {
+            background: rgba(239, 68, 68, 0.14);
+            color: #dc2626;
+        }
+
+        .booking-status-pill--cancelled {
+            background: rgba(100, 116, 139, 0.16);
+            color: #475569;
+        }
+
+        .booking-detail-facts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin: 16px 0;
+        }
+
+        .booking-detail-fact {
+            padding: 14px 15px;
+            border-radius: 16px;
+            background: rgba(248, 250, 252, 0.92);
+            border: 1px solid #e5eefb;
+        }
+
+        .booking-detail-fact__label,
+        .booking-detail-purpose-label {
+            display: block;
+            margin-bottom: 6px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .booking-detail-fact__value {
+            color: #334155;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .booking-detail-purpose-block,
+        .booking-detail-reject {
+            margin-top: 14px;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(248, 250, 252, 0.92);
+            border: 1px solid #e5eefb;
+        }
+
+        .booking-detail-purpose,
+        .booking-detail-reject p {
+            margin: 0;
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .booking-detail-reject strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .booking-card-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .booking-card-actions__hint {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .booking-detail-foot {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #e5eefb;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        #nav-notify-wrap {
+            position: relative !important;
+            z-index: 10000 !important;
+        }
+
+        #notify-panel {
+            position: absolute !important;
+            top: calc(100% + 12px) !important;
+            right: 0 !important;
+            width: 460px !important;
+            min-width: 460px !important;
+            max-width: calc(100vw - 32px) !important;
+            border-radius: 16px !important;
+            background: rgba(255, 255, 255, 0.96) !important;
+            border: 1px solid #dbe7ee !important;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22) !important;
+            overflow: hidden !important;
+            z-index: 10001 !important;
+            backdrop-filter: blur(16px);
+        }
+
+        #notify-panel button {
+            width: auto !important;
+            min-width: 92px !important;
+            min-height: 42px !important;
+            padding: 10px 14px !important;
+            border-radius: 10px !important;
+            box-shadow: none !important;
+        }
+
+        [data-theme="dark"] body.with-shared-header {
+            background:
+                    radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 35%),
+                    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 35%),
+                    linear-gradient(135deg, #0f172a 0%, #111827 45%, #0f172a 100%);
+        }
+
+        [data-theme="dark"] .book-page-header,
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .booking-detail-card {
+            background: rgba(30, 41, 59, 0.92);
+            border-color: rgba(59, 130, 246, 0.18);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
+        }
+
+        [data-theme="dark"] .book-page-title,
+        [data-theme="dark"] .book-section-heading,
+        [data-theme="dark"] .book-resource-name,
+        [data-theme="dark"] .bookings-controls__label,
+        [data-theme="dark"] .booking-detail-card__title {
+            color: #f8fafc;
+        }
+
+        [data-theme="dark"] .book-page-lead,
+        [data-theme="dark"] .resource-browse-intro,
+        [data-theme="dark"] .booking-detail-card__meta,
+        [data-theme="dark"] .booking-card-actions__hint,
+        [data-theme="dark"] .booking-detail-foot {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] input,
+        [data-theme="dark"] select,
+        [data-theme="dark"] textarea {
+            background: #1e293b;
+            color: #f1f5f9;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        [data-theme="dark"] .bookings-controls,
+        [data-theme="dark"] .booking-detail-fact,
+        [data-theme="dark"] .booking-detail-purpose-block,
+        [data-theme="dark"] .booking-detail-reject {
+            background: rgba(15, 23, 42, 0.54);
+            border-color: rgba(59, 130, 246, 0.14);
+        }
+
+        [data-theme="dark"] .booking-detail-fact__value,
+        [data-theme="dark"] .booking-detail-purpose,
+        [data-theme="dark"] .booking-detail-reject p {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .booking-detail-fact__label,
+        [data-theme="dark"] .booking-detail-purpose-label {
+            color: #94a3b8;
+        }
+
+        @media (max-width: 1000px) {
+            .grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .bookings-filters {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .book-page {
+                width: min(100% - 24px, 1180px);
+                padding-top: 105px;
+            }
+
+            .book-page-header,
+            .card {
+                padding: 26px 20px;
+                border-radius: 24px;
+            }
+
+            .book-page-title {
+                font-size: 31px;
+            }
+
+            .book-section-heading {
+                font-size: 26px;
+            }
+
+            .grid,
+            .bookings-filters,
+            .booking-detail-facts {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-detail-card__layout {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-detail-card__aside {
+                padding: 18px;
+            }
+
+            .booking-date-badge {
+                width: 100%;
+                min-height: 92px;
+                grid-template-columns: repeat(4, auto);
+                gap: 10px;
+            }
+
+            .actions,
+            .bookings-filter-actions,
+            .booking-card-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .actions button,
+            .actions a,
+            .bookings-filter-actions button {
+                width: 100%;
+            }
+
+            #notify-panel {
+                position: fixed !important;
+                top: 82px !important;
+                left: 12px !important;
+                right: 12px !important;
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+            }
+        }
+    </style>
 </head>
+
 <body class="with-shared-header">
 <div id="site-header-mount"></div>
 
@@ -43,10 +759,12 @@
                     <input id="book-attendees" type="number" min="1" placeholder="e.g. 12">
                 </label>
             </div>
-            <label style="margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:14px;">
+
+            <label style="margin-top:12px;">
                 Purpose (min 5 characters)
                 <textarea id="book-purpose" rows="4" minlength="5" maxlength="500" required placeholder="Describe how you will use this space or equipment"></textarea>
             </label>
+
             <div class="actions">
                 <button type="submit">Submit booking request</button>
                 <a class="resource-back-link" href="/resource.html">Browse more resources</a>
@@ -70,6 +788,7 @@
 
         <div class="bookings-controls">
             <p class="bookings-controls__label">Filter &amp; search</p>
+
             <div class="bookings-toolbar">
                 <div class="bookings-filters">
                     <label>Status
@@ -81,17 +800,21 @@
                             <option value="CANCELLED">Cancelled</option>
                         </select>
                     </label>
+
                     <label>From
                         <input type="date" id="filter-date-from" disabled aria-label="Filter from booking date">
                     </label>
+
                     <label>To
                         <input type="date" id="filter-date-to" disabled aria-label="Filter to booking date">
                     </label>
+
                     <div class="bookings-filter-actions">
                         <button type="button" class="secondary bookings-filter-clear" id="filter-clear" disabled>Reset filters</button>
                         <button type="button" class="secondary bookings-history-clear" id="booking-history-clear" disabled title="Removes approved, rejected, and cancelled bookings from your account. Pending requests stay.">Clear history</button>
                     </div>
                 </div>
+
                 <div class="bookings-search-row">
                     <label for="bookings-search" class="visually-hidden">Search your bookings</label>
                     <div class="bookings-search-wrap">
@@ -222,7 +945,6 @@
             return [];
         }
 
-        /** Comparable YYYY-MM-DD for range filters, or null */
         function bookingDateIso(b) {
             const s = fmtLocalDate(b.bookingDate);
             if (!s || s === "—" || s.length < 10) return null;
@@ -262,7 +984,6 @@
                 .replace(/\s+/g, " ");
         }
 
-        /** Each whitespace-separated token must appear (AND). */
         function matchesSearchTokens(b, query) {
             const normalized = normalizeSearchQuery(query);
             if (!normalized) return true;
@@ -386,20 +1107,20 @@
             const dp = formatDateParts(b.bookingDate);
             const dateAside = dp
                 ? '<aside class="booking-detail-card__aside" aria-hidden="true">' +
-                  '<div class="booking-date-badge">' +
-                  '<span class="booking-date-badge__wd">' +
-                  escapeHtml(dp.weekday) +
-                  "</span>" +
-                  '<span class="booking-date-badge__day">' +
-                  escapeHtml(dp.day) +
-                  "</span>" +
-                  '<span class="booking-date-badge__mon">' +
-                  escapeHtml(dp.mon) +
-                  "</span>" +
-                  '<span class="booking-date-badge__yr">' +
-                  escapeHtml(dp.year) +
-                  "</span>" +
-                  "</div></aside>"
+                '<div class="booking-date-badge">' +
+                '<span class="booking-date-badge__wd">' +
+                escapeHtml(dp.weekday) +
+                "</span>" +
+                '<span class="booking-date-badge__day">' +
+                escapeHtml(dp.day) +
+                "</span>" +
+                '<span class="booking-date-badge__mon">' +
+                escapeHtml(dp.mon) +
+                "</span>" +
+                '<span class="booking-date-badge__yr">' +
+                escapeHtml(dp.year) +
+                "</span>" +
+                "</div></aside>"
                 : "";
             const rejectBlock =
                 (b.status || "").toUpperCase() === "REJECTED" && b.rejectionReason
@@ -531,6 +1252,16 @@
         filterDateToEl.addEventListener("change", onFilterChange);
         filterClearBtn.addEventListener("click", clearFilters);
 
+        const user = getCurrentUser();
+        const resolvedUserId = (function () {
+            if (!user) return null;
+            const a = user.userId != null && user.userId !== "" ? Number(user.userId) : NaN;
+            if (Number.isFinite(a) && a > 0) return a;
+            const b = user.id != null && user.id !== "" ? Number(user.id) : NaN;
+            if (Number.isFinite(b) && b > 0) return b;
+            return null;
+        })();
+
         if (bookingHistoryClearBtn) {
             bookingHistoryClearBtn.addEventListener("click", async function () {
                 if (!resolvedUserId) return;
@@ -570,15 +1301,6 @@
             });
         }
 
-        const user = getCurrentUser();
-        const resolvedUserId = (function () {
-            if (!user) return null;
-            const a = user.userId != null && user.userId !== "" ? Number(user.userId) : NaN;
-            if (Number.isFinite(a) && a > 0) return a;
-            const b = user.id != null && user.id !== "" ? Number(user.id) : NaN;
-            if (Number.isFinite(b) && b > 0) return b;
-            return null;
-        })();
         if (resolvedUserId == null) {
             requireLogin();
             return;
@@ -715,6 +1437,7 @@
         });
     })();
 </script>
+
 <script>
     fetch("/footer.html")
         .then((response) => response.ok ? response.text() : "")
@@ -724,6 +1447,7 @@
         })
         .catch(() => {});
 </script>
+
 <script src="/js/header-loader.js"></script>
 <script src="/js/notification-bell.js"></script>
 <script src="/nav-highlight.js"></script>

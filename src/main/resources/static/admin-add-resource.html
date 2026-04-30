@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add resource | Admin</title>
+    <title>Add resource | Campus Orbit Admin</title>
+
     <script src="/app-settings.js"></script>
     <script>
         window.RESOURCE_ADMIN_PAGE = "add";
+
         (function enforceAdmin() {
             try {
                 const raw = localStorage.getItem("smartCampusUser");
+
                 if (!raw) {
                     window.location.replace("/login.html");
                     return;
                 }
+
                 if (JSON.parse(raw).role !== "ADMIN") {
                     window.location.replace("/resource.html");
                 }
@@ -22,123 +26,660 @@
             }
         })();
     </script>
+
     <link rel="stylesheet" href="/css/campus-nexus-theme.css">
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/brand-logo.css">
     <link rel="stylesheet" href="/css/admin-add-resource.css">
     <link rel="stylesheet" href="/css/nav-highlight.css">
     <link rel="stylesheet" href="/css/footer.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --admin-primary: #1d4ed8;
+            --admin-primary-dark: #0f2f6b;
+            --admin-teal: #2563eb;
+            --admin-teal-soft: #eff6ff;
+            --admin-bg: #f6fafc;
+            --admin-card: rgba(255, 255, 255, 0.92);
+            --admin-text: #1e293b;
+            --admin-muted: #64748b;
+            --admin-border: #dbe7f5;
+            --admin-danger: #dc2626;
+            --admin-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+            --admin-shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.07);
+        }
+
+        body.admin-add-resource-page {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--admin-text);
+            background:
+                    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 28%),
+                    radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.10), transparent 30%),
+                    linear-gradient(135deg, #f8fbfd 0%, #eef6ff 48%, #f6f9fc 100%);
+            overflow-x: hidden;
+        }
+
+        body.admin-add-resource-page::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.35) 1px, transparent 1px);
+            background-size: 42px 42px;
+            pointer-events: none;
+            opacity: 0.45;
+            z-index: 0;
+        }
+
+        .admin-app {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+        }
+
+        .admin-sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 22px 18px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(18px);
+            border-right: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 12px 0 40px rgba(15, 23, 42, 0.04);
+        }
+
+        .admin-sidebar-title {
+            margin: 0 0 22px;
+            padding: 16px 18px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, var(--admin-primary-dark), var(--admin-teal));
+            color: #ffffff;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            box-shadow: 0 16px 35px rgba(37, 99, 235, 0.22);
+        }
+
+        .admin-sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .admin-sidebar-link,
+        .admin-sidebar-summary,
+        .admin-sidebar-sublink {
+            display: flex;
+            align-items: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--admin-text);
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid transparent;
+            transition: all 0.22s ease;
+            cursor: pointer;
+        }
+
+        .admin-sidebar-link:hover,
+        .admin-sidebar-summary:hover,
+        .admin-sidebar-sublink:hover {
+            transform: translateX(4px);
+            color: var(--admin-primary);
+            background: #f8fbff;
+            border-color: #dce9f1;
+        }
+
+        .admin-sidebar-details summary {
+            list-style: none;
+        }
+
+        .admin-sidebar-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .admin-sidebar-summary {
+            justify-content: space-between;
+        }
+
+        .admin-sidebar-summary::after {
+            content: "⌄";
+            font-size: 18px;
+            color: var(--admin-teal);
+            font-weight: 900;
+        }
+
+        .admin-sidebar-details[open] .admin-sidebar-summary::after {
+            content: "⌃";
+        }
+
+        .admin-sidebar-dropdown-panel {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 18px;
+            background: rgba(239, 246, 255, 0.9);
+            border: 1px solid var(--admin-border);
+        }
+
+        .admin-sidebar-sublink {
+            min-height: 42px;
+            padding-left: 20px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .admin-sidebar-sublink[href="/admin-add-resource.html"] {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14);
+        }
+
+        .admin-content {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            min-height: 86px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 18px 34px;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .admin-top-bar-brand-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .admin-brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            object-fit: contain;
+        }
+
+        .admin-top-bar-brand {
+            color: var(--admin-primary-dark);
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .admin-top-bar-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0 22px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--admin-primary);
+            background: #ffffff;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+            transition: all 0.22s ease;
+        }
+
+        .admin-top-bar-link:hover {
+            transform: translateY(-2px);
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            border-color: transparent;
+        }
+
+        .admin-main-scroll {
+            flex: 1;
+            padding: 32px;
+        }
+
+        .admin-page-inner {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 26px;
+        }
+
+        .admin-page-inner > h1 {
+            margin: 0;
+            padding: 42px 46px 10px;
+            border-radius: 34px 34px 0 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(239, 246, 255, 0.92));
+            color: var(--admin-primary-dark);
+            font-size: 46px;
+            line-height: 1.05;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            box-shadow: var(--admin-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-page-inner > h1::before {
+            content: "RESOURCE";
+            display: inline-flex;
+            position: absolute;
+            top: 28px;
+            left: 46px;
+            transform: translateY(-100%);
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: var(--admin-teal-soft);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
+        .admin-page-inner > h1::after {
+            content: "";
+            position: absolute;
+            width: 230px;
+            height: 230px;
+            right: -80px;
+            top: -80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.14), rgba(37, 99, 235, 0.05));
+        }
+
+        .resource-browse-intro {
+            margin: -26px 0 0;
+            padding: 0 46px 38px;
+            border-radius: 0 0 34px 34px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(239, 246, 255, 0.92));
+            color: var(--admin-muted);
+            font-size: 17px;
+            line-height: 1.7;
+            box-shadow: var(--admin-shadow);
+        }
+
+        .resource-browse-intro strong {
+            color: var(--admin-primary);
+            font-weight: 800;
+        }
+
+        .card {
+            background: var(--admin-card);
+            border: 1px solid rgba(255, 255, 255, 0.96);
+            border-radius: 34px;
+            padding: 36px 42px;
+            box-shadow: var(--admin-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .card h2 {
+            margin: 0 0 10px;
+            color: var(--admin-primary-dark);
+            font-size: 30px;
+            line-height: 1.1;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .status-text {
+            min-height: 24px;
+            margin: 8px 0 22px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: #f6f9ff;
+            border: 1px solid #dbe7f5;
+            color: #1d4ed8;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        #resource-form {
+            display: grid;
+            gap: 24px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        label {
+            display: grid;
+            gap: 8px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.045em;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            min-height: 50px;
+            border: 1px solid var(--admin-border);
+            border-radius: 16px;
+            background: #ffffff;
+            color: var(--admin-text);
+            padding: 14px 16px;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: 0;
+            outline: none;
+            transition: all 0.22s ease;
+        }
+
+        textarea {
+            min-height: 130px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .admin-add-resource-description {
+            grid-column: 1 / -1;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding-top: 4px;
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0 22px;
+            border: none;
+            border-radius: 16px;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.16);
+            transition: all 0.22s ease;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 32px rgba(37, 99, 235, 0.20);
+        }
+
+        button.secondary {
+            color: var(--admin-primary);
+            background: #ffffff;
+            border: 1px solid var(--admin-border);
+            box-shadow: none;
+        }
+
+        button.secondary:hover {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            border-color: transparent;
+        }
+
+        #site-footer {
+            padding: 0 32px 24px;
+        }
+
+        @media (max-width: 1100px) {
+            .admin-app {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-sidebar {
+                position: relative;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.92);
+            }
+
+            .admin-sidebar-nav {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .admin-top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px 20px;
+            }
+
+            .admin-top-bar-link {
+                width: 100%;
+            }
+
+            .admin-main-scroll {
+                padding: 22px 18px;
+            }
+
+            .admin-page-inner {
+                gap: 20px;
+            }
+
+            .admin-page-inner > h1 {
+                padding: 42px 22px 10px;
+                border-radius: 24px 24px 0 0;
+                font-size: 36px;
+            }
+
+            .admin-page-inner > h1::before {
+                left: 22px;
+            }
+
+            .resource-browse-intro {
+                margin-top: -20px;
+                padding: 0 22px 28px;
+                border-radius: 0 0 24px 24px;
+                font-size: 15px;
+            }
+
+            .card {
+                padding: 24px 20px;
+                border-radius: 24px;
+            }
+
+            .card h2 {
+                font-size: 26px;
+            }
+
+            .admin-sidebar-nav,
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .actions button {
+                width: 100%;
+            }
+
+            #site-footer {
+                padding: 0 18px 18px;
+            }
+        }
+    </style>
 </head>
+
 <body class="admin-add-resource-page">
 <div class="admin-app">
     <aside class="admin-sidebar">
         <p class="admin-sidebar-title">Management</p>
+
         <nav class="admin-sidebar-nav" aria-label="Management modules">
             <a href="/admin.html" class="admin-sidebar-link">Dashboard</a>
             <a href="/admin-users.html" class="admin-sidebar-link">User management</a>
-            <details class="admin-sidebar-details">
+
+            <details class="admin-sidebar-details" open>
                 <summary class="admin-sidebar-summary">Resource management</summary>
+
                 <div class="admin-sidebar-dropdown-panel">
                     <a href="/admin-show-resource.html" class="admin-sidebar-sublink">Show resources</a>
                     <a href="/admin-add-resource.html" class="admin-sidebar-sublink">Add resource</a>
                 </div>
             </details>
+
             <a href="/admin-bookings.html" class="admin-sidebar-link">Booking management</a>
             <a href="/admin-contact.html" class="admin-sidebar-link">Contact us management</a>
         </nav>
     </aside>
+
     <div class="admin-content">
         <header class="admin-top-bar">
-            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Nexus — Home">
+            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Orbit — Home">
                 <img class="admin-brand-logo" src="/images/campus-nexus-logo.png" width="36" height="36" alt="" decoding="async">
-                <span class="admin-top-bar-brand">Campus Nexus — Admin</span>
+                <span class="admin-top-bar-brand">Campus Orbit — Admin</span>
             </a>
+
             <a href="/profile.html" class="admin-top-bar-link">My Profile</a>
         </header>
+
         <main class="admin-main-scroll">
             <div class="admin-page-inner">
-    <h1>Add / update resource</h1>
-    <p class="resource-browse-intro">Create a new resource or follow a link from <strong>Show resources</strong> to edit an existing one.</p>
+                <h1>Add / update resource</h1>
 
-    <section id="resource-admin-section" class="card">
-        <h2>Add / Update Resource</h2>
-        <p id="form-status" class="status-text"></p>
-        <form id="resource-form">
-            <input type="hidden" id="resource-id">
+                <p class="resource-browse-intro">
+                    Create a new resource or follow a link from <strong>Show resources</strong> to edit an existing one.
+                </p>
 
-            <div class="grid">
-                <label>Name
-                    <input id="name" required>
-                </label>
+                <section id="resource-admin-section" class="card">
+                    <h2>Resource details</h2>
+                    <p id="form-status" class="status-text"></p>
 
-                <label>Type
-                    <select id="type" required>
-                        <option value="LECTURE_HALL">Lecture hall</option>
-                        <option value="LAB">Lab</option>
-                        <option value="MEETING_ROOM">Meeting room</option>
-                        <option value="EQUIPMENT">Equipment</option>
-                    </select>
-                </label>
+                    <form id="resource-form">
+                        <input type="hidden" id="resource-id">
 
-                <label>Reservation category
-                    <select id="resource-category" required>
-                        <option value="STAFF_LEARNING">Learning space (staff only)</option>
-                        <option value="STUDENT_DISCUSSION">Discussion space (students)</option>
-                        <option value="HALL_LAB">Halls &amp; labs</option>
-                        <option value="PROJECTOR_EQUIPMENT">Projectors &amp; equipment</option>
-                    </select>
-                </label>
+                        <div class="grid">
+                            <label>Name
+                                <input id="name" required>
+                            </label>
 
-                <label>Location
-                    <input id="location" required>
-                </label>
+                            <label>Type
+                                <select id="type" required>
+                                    <option value="LECTURE_HALL">Lecture hall</option>
+                                    <option value="LAB">Lab</option>
+                                    <option value="MEETING_ROOM">Meeting room</option>
+                                    <option value="EQUIPMENT">Equipment</option>
+                                </select>
+                            </label>
 
-                <label>Capacity
-                    <input id="capacity" type="number" min="1" required>
-                </label>
+                            <label>Reservation category
+                                <select id="resource-category" required>
+                                    <option value="STAFF_LEARNING">Learning space (staff only)</option>
+                                    <option value="STUDENT_DISCUSSION">Discussion space (students)</option>
+                                    <option value="HALL_LAB">Halls &amp; labs</option>
+                                    <option value="PROJECTOR_EQUIPMENT">Projectors &amp; equipment</option>
+                                </select>
+                            </label>
 
-                <label>WiFi
-                    <select id="hasWifi">
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
-                </label>
+                            <label>Location
+                                <input id="location" required>
+                            </label>
 
-                <label>Air conditioning
-                    <select id="hasAc">
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
-                </label>
+                            <label>Capacity
+                                <input id="capacity" type="number" min="1" required>
+                            </label>
 
-                <label>Projector
-                    <select id="hasProjector">
-                        <option value="false">No</option>
-                        <option value="true">Yes</option>
-                    </select>
-                </label>
+                            <label>WiFi
+                                <select id="hasWifi">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </label>
 
-                <label>Status
-                    <select id="status" required>
-                        <option value="ACTIVE">Active</option>
-                        <option value="OUT_OF_SERVICE">Out of service</option>
-                        <option value="MAINTENANCE">Maintenance</option>
-                    </select>
-                </label>
+                            <label>Air conditioning
+                                <select id="hasAc">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </label>
 
-                <label class="admin-add-resource-description">Description
-                    <textarea id="description" rows="4" maxlength="500" placeholder="Optional notes (max 500 characters)"></textarea>
-                </label>
-            </div>
+                            <label>Projector
+                                <select id="hasProjector">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </label>
 
-            <div class="actions">
-                <button type="submit">Save Resource</button>
-                <button type="button" id="cancel-edit" class="secondary">Cancel Edit</button>
-            </div>
-        </form>
-    </section>
+                            <label>Status
+                                <select id="status" required>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="OUT_OF_SERVICE">Out of service</option>
+                                    <option value="MAINTENANCE">Maintenance</option>
+                                </select>
+                            </label>
+
+                            <label class="admin-add-resource-description">Description
+                                <textarea id="description" rows="4" maxlength="500" placeholder="Optional notes (max 500 characters)"></textarea>
+                            </label>
+                        </div>
+
+                        <div class="actions">
+                            <button type="submit">Save Resource</button>
+                            <button type="button" id="cancel-edit" class="secondary">Cancel Edit</button>
+                        </div>
+                    </form>
+                </section>
             </div>
         </main>
+
         <div id="site-footer"></div>
     </div>
 </div>
@@ -148,10 +689,14 @@
         .then((response) => response.ok ? response.text() : "")
         .then((footerHtml) => {
             const footerContainer = document.getElementById("site-footer");
-            if (footerContainer) footerContainer.innerHTML = footerHtml;
+
+            if (footerContainer) {
+                footerContainer.innerHTML = footerHtml;
+            }
         })
         .catch(() => {});
 </script>
+
 <script src="app.js"></script>
 <script src="/nav-highlight.js"></script>
 </body>

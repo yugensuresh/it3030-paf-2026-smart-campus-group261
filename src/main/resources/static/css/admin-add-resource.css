@@ -4,12 +4,12 @@
     font-family: var(--ff-display);
     font-size: clamp(1.5rem, 2.5vw, 1.85rem);
     font-weight: 700;
-    color: var(--cream);
+    color: var(--blue);
     margin: 0 0 8px;
 }
 
 .admin-add-resource-page .resource-browse-intro {
-    color: var(--muted);
+    color: var(--gray);
     font-size: 14px;
     line-height: 1.55;
     margin: 0 0 22px;
@@ -17,11 +17,11 @@
 }
 
 .admin-add-resource-page .resource-browse-intro strong {
-    color: var(--gold2);
+    color: var(--blue3);
 }
 
 .admin-add-resource-page #resource-admin-section.card {
-    background: var(--navy2);
+    background: var(--white);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 20px;
@@ -33,7 +33,7 @@
     font-family: var(--ff-display);
     font-size: 1.35rem;
     font-weight: 600;
-    color: var(--cream);
+    color: var(--blue);
     margin-bottom: 14px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border);
@@ -44,14 +44,14 @@
     margin-bottom: 14px;
     min-height: 1.3em;
     font-size: 14px;
-    color: var(--muted);
+    color: var(--gray);
 }
 
 .admin-add-resource-page #form-status:not(:empty) {
     padding: 8px 12px;
     border-radius: 8px;
-    background: rgba(201, 168, 76, 0.06);
-    border: 1px solid rgba(201, 168, 76, 0.12);
+    background: rgba(59, 130, 246, 0.06);
+    border: 1px solid rgba(59, 130, 246, 0.12);
 }
 
 .admin-add-resource-page .grid {
@@ -68,7 +68,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--muted);
+    color: var(--gray);
 }
 
 .admin-add-resource-page .grid .admin-add-resource-description {
@@ -79,8 +79,8 @@
     padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: var(--navy3);
-    color: var(--white);
+    background: var(--white);
+    color: var(--blue);
     font-size: 14px;
     font-family: inherit;
     line-height: 1.45;
@@ -91,7 +91,7 @@
 
 .admin-add-resource-page .grid textarea:focus {
     outline: none;
-    border-color: var(--gold);
+    border-color: var(--blue3);
     box-shadow: 0 0 0 3px var(--glow);
 }
 
@@ -100,8 +100,8 @@
     padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: var(--navy3);
-    color: var(--white);
+    background: var(--white);
+    color: var(--blue);
     font-size: 14px;
     transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -109,7 +109,7 @@
 .admin-add-resource-page .grid input:focus,
 .admin-add-resource-page .grid select:focus {
     outline: none;
-    border-color: var(--gold);
+    border-color: var(--blue3);
     box-shadow: 0 0 0 3px var(--glow);
 }
 
@@ -128,8 +128,8 @@
     font-size: 14px;
     cursor: pointer;
     border: 1px solid transparent;
-    background: linear-gradient(135deg, var(--gold), #a87c2a);
-    color: var(--navy);
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    color: var(--white);
 }
 
 .admin-add-resource-page #resource-admin-section .actions button:hover {
@@ -137,14 +137,14 @@
 }
 
 .admin-add-resource-page #resource-admin-section .actions button.secondary {
-    background: var(--navy3);
-    color: var(--white);
+    background: var(--white);
+    color: var(--blue);
     border: 1px solid var(--border);
 }
 
 .admin-add-resource-page #resource-admin-section .actions button.secondary:hover {
-    border-color: rgba(201, 168, 76, 0.45);
-    color: var(--gold2);
+    border-color: rgba(59, 130, 246, 0.45);
+    color: var(--blue3);
 }
 
 @media (max-width: 640px) {

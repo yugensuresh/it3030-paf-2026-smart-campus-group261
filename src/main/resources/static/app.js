@@ -5,14 +5,17 @@ const BROWSE_ONLY = window.RESOURCE_PAGE_MODE === "browse";
 const ADMIN_ADD = window.RESOURCE_ADMIN_PAGE === "add";
 const ADMIN_LIST = window.RESOURCE_ADMIN_PAGE === "list";
 
-const form = document.getElementById("resource-form");
-const cancelEditBtn = document.getElementById("cancel-edit");
-const tbody = document.getElementById("resource-table-body");
-const statusText = document.getElementById("status-text");
-const formStatus = document.getElementById("form-status");
+let form, cancelEditBtn, tbody, statusText, formStatus, applyFiltersBtn, clearFiltersBtn;
 
-const applyFiltersBtn = document.getElementById("apply-filters");
-const clearFiltersBtn = document.getElementById("clear-filters");
+function initializeElements() {
+    form = document.getElementById("resource-form");
+    cancelEditBtn = document.getElementById("cancel-edit");
+    tbody = document.getElementById("resource-table-body");
+    statusText = document.getElementById("status-text");
+    formStatus = document.getElementById("form-status");
+    applyFiltersBtn = document.getElementById("apply-filters");
+    clearFiltersBtn = document.getElementById("clear-filters");
+}
 
 function setListStatus(msg) {
     if (statusText) {
@@ -26,15 +29,29 @@ function setFormStatus(msg) {
     }
 }
 
-if (BROWSE_ONLY || ADMIN_LIST) {
-    if (!tbody || !statusText || !applyFiltersBtn || !clearFiltersBtn) {
-        throw new Error("Resource list page elements are missing.");
+function validatePageElements() {
+    if (BROWSE_ONLY || ADMIN_LIST) {
+        if (!tbody || !statusText || !applyFiltersBtn || !clearFiltersBtn) {
+            console.error("Resource list page elements are missing.", {
+                tbody: !!tbody,
+                statusText: !!statusText,
+                applyFiltersBtn: !!applyFiltersBtn,
+                clearFiltersBtn: !!clearFiltersBtn
+            });
+            return false;
+        }
     }
-}
-if (ADMIN_ADD) {
-    if (!form || !cancelEditBtn || !formStatus) {
-        throw new Error("Admin add-resource form elements are missing.");
+    if (ADMIN_ADD) {
+        if (!form || !cancelEditBtn || !formStatus) {
+            console.error("Admin add-resource form elements are missing.", {
+                form: !!form,
+                cancelEditBtn: !!cancelEditBtn,
+                formStatus: !!formStatus
+            });
+            return false;
+        }
     }
+    return true;
 }
 
 const CATEGORY_LABELS = {
@@ -352,83 +369,92 @@ async function tryLoadEditFromQuery() {
     fillFormForEdit(resource);
 }
 
-if (form) {
-    form.addEventListener("submit", async (event) => {
-        if (!isResourceAdmin()) {
-            event.preventDefault();
-            setFormStatus("Only administrators can add or change resources.");
-            return;
-        }
-        try {
-            await saveResource(event);
-        } catch (error) {
-            setFormStatus(error.message);
-        }
-    });
-}
-
-if (cancelEditBtn) {
-    cancelEditBtn.addEventListener("click", () => {
-        clearForm();
-        setFormStatus("Edit cancelled.");
-    });
-}
-
-if (applyFiltersBtn) {
-    applyFiltersBtn.addEventListener("click", async () => {
-        try {
-            await fetchResources();
-        } catch (error) {
-            setListStatus(error.message);
-        }
-    });
-}
-
-if (clearFiltersBtn) {
-    clearFiltersBtn.addEventListener("click", async () => {
-        clearFilters();
-        document.querySelectorAll(".category-pick").forEach((b) => b.classList.remove("is-active"));
-        try {
-            await fetchResources();
-        } catch (error) {
-            setListStatus(error.message);
-        }
-    });
-}
-
-document.querySelectorAll(".category-pick").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-        const filterCat = document.getElementById("filter-category");
-        if (filterCat) {
-            filterCat.value = btn.dataset.category ?? "";
-        }
-        document.querySelectorAll(".category-pick").forEach((b) => b.classList.remove("is-active"));
-        btn.classList.add("is-active");
-        try {
-            await fetchResources();
-        } catch (error) {
-            setListStatus(error.message);
-        }
-    });
-});
-
-const filterCategoryEl = document.getElementById("filter-category");
-if (filterCategoryEl) {
-    filterCategoryEl.addEventListener("change", async () => {
-        const val = filterCategoryEl.value;
-        document.querySelectorAll(".category-pick").forEach((b) => {
-            b.classList.toggle("is-active", (b.dataset.category || "") === val);
+function setupEventListeners() {
+    if (form) {
+        form.addEventListener("submit", async (event) => {
+            if (!isResourceAdmin()) {
+                event.preventDefault();
+                setFormStatus("Only administrators can add or change resources.");
+                return;
+            }
+            try {
+                await saveResource(event);
+            } catch (error) {
+                setFormStatus(error.message);
+            }
         });
-        try {
-            await fetchResources();
-        } catch (error) {
-            setListStatus(error.message);
-        }
+    }
+
+    if (cancelEditBtn) {
+        cancelEditBtn.addEventListener("click", () => {
+            clearForm();
+            setFormStatus("Edit cancelled.");
+        });
+    }
+
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener("click", async () => {
+            try {
+                await fetchResources();
+            } catch (error) {
+                setListStatus(error.message);
+            }
+        });
+    }
+
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener("click", async () => {
+            clearFilters();
+            document.querySelectorAll(".category-pick").forEach((b) => b.classList.remove("is-active"));
+            try {
+                await fetchResources();
+            } catch (error) {
+                setListStatus(error.message);
+            }
+        });
+    }
+
+    document.querySelectorAll(".category-pick").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+            const filterCat = document.getElementById("filter-category");
+            if (filterCat) {
+                filterCat.value = btn.dataset.category ?? "";
+            }
+            document.querySelectorAll(".category-pick").forEach((b) => b.classList.remove("is-active"));
+            btn.classList.add("is-active");
+            try {
+                await fetchResources();
+            } catch (error) {
+                setListStatus(error.message);
+            }
+        });
     });
+
+    const filterCategoryEl = document.getElementById("filter-category");
+    if (filterCategoryEl) {
+        filterCategoryEl.addEventListener("change", async () => {
+            const val = filterCategoryEl.value;
+            document.querySelectorAll(".category-pick").forEach((b) => {
+                b.classList.toggle("is-active", (b.dataset.category || "") === val);
+            });
+            try {
+                await fetchResources();
+            } catch (error) {
+                setListStatus(error.message);
+            }
+        });
+    }
 }
 
 window.addEventListener("load", async () => {
     try {
+        initializeElements();
+        if (!validatePageElements()) {
+            return;
+        }
+        
+        setupEventListeners();
+        
         if (ADMIN_LIST || BROWSE_ONLY) {
             await fetchResources();
         }

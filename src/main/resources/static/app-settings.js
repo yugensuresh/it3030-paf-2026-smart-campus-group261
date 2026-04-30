@@ -1,35 +1,35 @@
 (function () {
     const SETTINGS_KEY = "smartCampusSettings";
     const defaults = {
-        theme: "dark",
+        theme: "light",
         fontSize: "medium",
         fontStyle: "inter"
     };
 
     const themeTokens = {
         dark: {
-            "--navy": "#0b1120",
-            "--navy2": "#111827",
-            "--navy3": "#1a2740",
-            "--gold": "#c9a84c",
-            "--gold2": "#f0c96d",
-            "--cream": "#f5f0e8",
-            "--muted": "#8899aa",
+            "--blue": "#3b82f6",
+            "--blue2": "#2563eb",
+            "--blue3": "#1e40af",
+            "--blue4": "#1e3a8a",
+            "--light-blue": "#dbeafe",
             "--white": "#ffffff",
-            "--border": "rgba(201,168,76,.18)",
-            "--glow": "rgba(201,168,76,.12)"
+            "--gray": "#6b7280",
+            "--light-gray": "#f3f4f6",
+            "--border": "rgba(59, 130, 246, 0.2)",
+            "--glow": "rgba(59, 130, 246, 0.1)"
         },
         light: {
-            "--navy": "#f4f7fc",
-            "--navy2": "#ffffff",
-            "--navy3": "#e9eef7",
-            "--gold": "#9b6b16",
-            "--gold2": "#b8861f",
-            "--cream": "#1f2937",
-            "--muted": "#4b5563",
-            "--white": "#111827",
-            "--border": "rgba(17,24,39,.15)",
-            "--glow": "rgba(17,24,39,.08)"
+            "--blue": "#1e40af",
+            "--blue2": "#2563eb",
+            "--blue3": "#3b82f6",
+            "--blue4": "#60a5fa",
+            "--light-blue": "#eff6ff",
+            "--white": "#ffffff",
+            "--gray": "#4b5563",
+            "--light-gray": "#f9fafb",
+            "--border": "rgba(59, 130, 246, 0.15)",
+            "--glow": "rgba(59, 130, 246, 0.08)"
         }
     };
 

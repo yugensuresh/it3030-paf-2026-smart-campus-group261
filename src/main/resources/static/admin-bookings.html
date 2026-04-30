@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking management | Admin</title>
+    <title>Booking management | Campus Orbit Admin</title>
+
     <script src="/app-settings.js"></script>
     <script>
         (function enforceAdmin() {
             try {
                 const raw = localStorage.getItem("smartCampusUser");
+
                 if (!raw) {
                     window.location.replace("/login.html");
                     return;
                 }
+
                 if (JSON.parse(raw).role !== "ADMIN") {
                     window.location.replace("/resource.html");
                 }
@@ -21,45 +24,890 @@
             }
         })();
     </script>
+
     <link rel="stylesheet" href="/css/campus-nexus-theme.css">
     <link rel="stylesheet" href="/css/resource.css">
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/brand-logo.css">
     <link rel="stylesheet" href="/css/nav-highlight.css">
     <link rel="stylesheet" href="/css/footer.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --admin-primary: #1d4ed8;
+            --admin-primary-dark: #0f2f6b;
+            --admin-teal: #2563eb;
+            --admin-teal-soft: #eff6ff;
+            --admin-bg: #f6fafc;
+            --admin-card: rgba(255, 255, 255, 0.92);
+            --admin-text: #1e293b;
+            --admin-muted: #64748b;
+            --admin-border: #dbe7f5;
+            --admin-danger: #dc2626;
+            --admin-warning: #d97706;
+            --admin-success: #059669;
+            --admin-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+            --admin-shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.07);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--admin-text);
+            background:
+                    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 28%),
+                    radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.10), transparent 30%),
+                    linear-gradient(135deg, #f8fbfd 0%, #eef6ff 48%, #f6f9fc 100%);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.35) 1px, transparent 1px);
+            background-size: 42px 42px;
+            pointer-events: none;
+            opacity: 0.45;
+            z-index: 0;
+        }
+
+        .admin-app {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+        }
+
+        .admin-sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 22px 18px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(18px);
+            border-right: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 12px 0 40px rgba(15, 23, 42, 0.04);
+        }
+
+        .admin-sidebar-title {
+            margin: 0 0 22px;
+            padding: 16px 18px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, var(--admin-primary-dark), var(--admin-teal));
+            color: #ffffff;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            box-shadow: 0 16px 35px rgba(37, 99, 235, 0.22);
+        }
+
+        .admin-sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .admin-sidebar-link,
+        .admin-sidebar-summary,
+        .admin-sidebar-sublink {
+            display: flex;
+            align-items: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--admin-text);
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid transparent;
+            transition: all 0.22s ease;
+            cursor: pointer;
+        }
+
+        .admin-sidebar-link:hover,
+        .admin-sidebar-summary:hover,
+        .admin-sidebar-sublink:hover {
+            transform: translateX(4px);
+            color: var(--admin-primary);
+            background: #f8fbff;
+            border-color: #dce9f1;
+        }
+
+        .admin-sidebar-link[href="/admin-bookings.html"] {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.16);
+        }
+
+        .admin-sidebar-details summary {
+            list-style: none;
+        }
+
+        .admin-sidebar-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .admin-sidebar-summary {
+            justify-content: space-between;
+        }
+
+        .admin-sidebar-summary::after {
+            content: "⌄";
+            font-size: 18px;
+            color: var(--admin-teal);
+            font-weight: 900;
+        }
+
+        .admin-sidebar-details[open] .admin-sidebar-summary::after {
+            content: "⌃";
+        }
+
+        .admin-sidebar-dropdown-panel {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 18px;
+            background: rgba(239, 246, 255, 0.9);
+            border: 1px solid var(--admin-border);
+        }
+
+        .admin-sidebar-sublink {
+            min-height: 42px;
+            padding-left: 20px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .admin-content {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            min-height: 86px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 18px 34px;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .admin-top-bar-brand-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .admin-brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            object-fit: contain;
+        }
+
+        .admin-top-bar-brand {
+            color: var(--admin-primary-dark);
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .admin-top-bar-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0 22px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--admin-primary);
+            background: #ffffff;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+            transition: all 0.22s ease;
+        }
+
+        .admin-top-bar-link:hover {
+            transform: translateY(-2px);
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            border-color: transparent;
+        }
+
+        .admin-main-scroll {
+            flex: 1;
+            padding: 32px;
+        }
+
+        .admin-page-inner {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 26px;
+        }
+
+        .admin-bookings-card {
+            position: relative;
+            z-index: 1;
+            background: var(--admin-card);
+            border: 1px solid rgba(255, 255, 255, 0.96);
+            border-radius: 24px;
+            padding: 32px 36px;
+            box-shadow: var(--admin-shadow);
+            backdrop-filter: blur(18px);
+            margin-bottom: 24px;
+        }
+
+        .admin-bookings-card::before {
+            content: "BOOKINGS";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            margin-bottom: 16px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            background: var(--admin-teal-soft);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
+        .admin-bookings-card::after {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            right: -90px;
+            top: -90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.14), rgba(37, 99, 235, 0.05));
+            pointer-events: none;
+        }
+
+        .admin-bookings-card h2 {
+            position: relative;
+            z-index: 1;
+            margin: 0 0 16px;
+            color: var(--admin-primary-dark);
+            font-size: 36px;
+            line-height: 1.05;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .admin-bookings-intro {
+            position: relative;
+            z-index: 1;
+            max-width: 820px;
+            margin: 0 0 24px;
+            color: var(--admin-muted);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .admin-bookings-status {
+            position: relative;
+            z-index: 1;
+            min-height: 24px;
+            margin: 0 0 24px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #f6f9ff;
+            border: 1px solid #dbe7f5;
+            color: #1d4ed8;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .admin-bookings-toolbar {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            padding: 20px 24px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f9fcfd, #f2f9f8);
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .admin-bookings-filter {
+            flex: 1 1 280px;
+            display: grid;
+            gap: 8px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.045em;
+        }
+
+        select {
+            width: 100%;
+            min-height: 50px;
+            border: 1px solid var(--admin-border);
+            border-radius: 16px;
+            background: #ffffff;
+            color: var(--admin-text);
+            padding: 14px 16px;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+
+        select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0 22px;
+            border: none;
+            border-radius: 16px;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-teal));
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.16);
+            transition: all 0.22s ease;
+            white-space: nowrap;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 32px rgba(37, 99, 235, 0.20);
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .admin-bookings-table-wrap {
+            position: relative;
+            z-index: 1;
+            overflow-x: auto;
+            border-radius: 24px;
+            border: 1px solid var(--admin-border);
+            background: #ffffff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .admin-bookings-table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+        }
+
+        .admin-bookings-table thead {
+            background: linear-gradient(135deg, var(--admin-primary-dark), var(--admin-teal));
+        }
+
+        .admin-bookings-table th {
+            padding: 16px 14px;
+            color: #ffffff;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .admin-bookings-table td {
+            padding: 14px 14px;
+            border-bottom: 1px solid #e5e7eb;
+            color: var(--admin-text);
+            font-size: 14px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.92);
+            vertical-align: middle;
+            line-height: 1.5;
+        }
+
+        .admin-bookings-table tbody tr:hover td {
+            background: rgba(59, 130, 246, 0.04);
+            transition: background 0.2s ease;
+        }
+
+        .admin-bookings-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .admin-booking-sub {
+            margin-top: 4px;
+            color: var(--admin-muted);
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .admin-booking-purpose {
+            max-width: 260px;
+            color: #334155;
+            line-height: 1.55;
+        }
+
+        .admin-booking-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.035em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .admin-booking-status--pending {
+            background: rgba(245, 158, 11, 0.12);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .admin-booking-status--approved {
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .admin-booking-status--rejected {
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .admin-booking-status--cancelled {
+            background: rgba(107, 114, 128, 0.12);
+            color: #6b7280;
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
+        .admin-booking-reason {
+            margin-top: 8px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.45;
+        }
+
+        .admin-booking-actions {
+            min-width: 170px;
+            white-space: nowrap;
+        }
+
+        .admin-booking-actions button,
+        .admin-booking-approve,
+        .admin-booking-reject {
+            min-height: 36px;
+            padding: 0 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .admin-booking-approve {
+            background: linear-gradient(135deg, #059669, #10b981);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .admin-booking-approve:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .admin-booking-reject {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .admin-booking-reject:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .admin-bookings-empty {
+            text-align: center;
+            padding: 30px !important;
+            color: var(--admin-muted) !important;
+            font-weight: 700 !important;
+        }
+
+        .admin-bookings-pagination {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 22px;
+            padding: 16px;
+            border-radius: 20px;
+            background: #f8fbff;
+            border: 1px solid var(--admin-border);
+        }
+
+        .admin-bookings-page-btn {
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 14px;
+            font-size: 14px;
+        }
+
+        .admin-bookings-page-label {
+            color: var(--admin-primary);
+            font-size: 14px;
+            font-weight: 800;
+            padding: 0 6px;
+        }
+
+        #site-footer {
+            padding: 0 32px 24px;
+        }
+
+        @media (max-width: 1100px) {
+            .admin-app {
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+                min-height: 0;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--admin-border);
+                padding: 20px 0;
+            }
+
+            .admin-sidebar-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 0 16px;
+                gap: 12px;
+            }
+
+            .admin-sidebar-link,
+            .admin-sidebar-sublink {
+                border-left: none;
+                border-radius: 8px;
+                padding: 10px 14px;
+            }
+
+            .admin-bookings-card {
+                padding: 28px 24px;
+            }
+
+            .admin-bookings-card h2 {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-top-bar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 16px 20px;
+                gap: 12px;
+            }
+
+            .admin-top-bar-link {
+                width: 100%;
+                text-align: center;
+            }
+
+            .admin-main-scroll {
+                padding: 20px 16px;
+            }
+
+            .admin-page-inner {
+                padding: 0;
+            }
+
+            .admin-bookings-card {
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+
+            .admin-bookings-card h2 {
+                font-size: 28px;
+                margin-bottom: 12px;
+            }
+
+            .admin-bookings-intro {
+                font-size: 15px;
+                margin-bottom: 20px;
+            }
+
+            .admin-bookings-toolbar {
+                align-items: stretch;
+                flex-direction: column;
+                padding: 16px 18px;
+                gap: 12px;
+            }
+
+            .admin-bookings-refresh,
+            .admin-bookings-toolbar button {
+                width: 100%;
+            }
+
+            .admin-sidebar-nav {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .admin-sidebar-link,
+            .admin-sidebar-sublink {
+                padding: 12px 16px;
+            }
+
+            .admin-bookings-table-wrap {
+                border-radius: 16px;
+            }
+
+            .admin-bookings-table th {
+                padding: 12px 10px;
+                font-size: 11px;
+            }
+
+            .admin-bookings-table td {
+                padding: 12px 10px;
+                font-size: 13px;
+            }
+
+            .admin-booking-actions {
+                min-width: 140px;
+            }
+
+            .admin-booking-actions button,
+            .admin-booking-approve,
+            .admin-booking-reject {
+                min-height: 32px;
+                padding: 0 10px;
+                font-size: 11px;
+                margin: 1px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .admin-bookings-card {
+                padding: 20px 16px;
+                border-radius: 16px;
+            }
+
+            .admin-bookings-card h2 {
+                font-size: 24px;
+            }
+
+            .admin-bookings-intro {
+                font-size: 14px;
+            }
+
+            .admin-bookings-toolbar {
+                padding: 14px 16px;
+            }
+
+            .admin-bookings-table {
+                min-width: 700px;
+            }
+
+            .admin-bookings-table th {
+                padding: 10px 8px;
+                font-size: 10px;
+                letter-spacing: 0.03em;
+            }
+
+            .admin-bookings-table td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+
+            .admin-booking-purpose {
+                max-width: 180px;
+                font-size: 12px;
+            }
+
+            .admin-booking-status {
+                min-height: 28px;
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+
+            .admin-booking-actions {
+                min-width: 120px;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .admin-booking-actions button,
+            .admin-booking-approve,
+            .admin-booking-reject {
+                width: 100%;
+                min-height: 30px;
+                font-size: 10px;
+                margin: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .admin-bookings-card {
+                padding: 16px 12px;
+            }
+
+            .admin-bookings-card h2 {
+                font-size: 20px;
+            }
+
+            .admin-bookings-intro {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+            .admin-bookings-toolbar {
+                padding: 12px 14px;
+            }
+
+            .admin-bookings-table {
+                min-width: 600px;
+            }
+
+            .admin-bookings-table th {
+                padding: 8px 6px;
+                font-size: 9px;
+            }
+
+            .admin-bookings-table td {
+                padding: 8px 6px;
+                font-size: 11px;
+            }
+
+            .admin-booking-purpose {
+                max-width: 120px;
+                font-size: 11px;
+                line-height: 1.3;
+            }
+
+            .admin-booking-sub {
+                font-size: 11px;
+            }
+
+            .admin-booking-reason {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+
+            .admin-bookings-pagination {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .admin-bookings-page-btn {
+                min-height: 36px;
+                font-size: 12px;
+            }
+
+            #site-footer {
+                padding: 0 12px 16px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 <div class="admin-app">
     <aside class="admin-sidebar">
         <p class="admin-sidebar-title">Management</p>
+
         <nav class="admin-sidebar-nav" aria-label="Management modules">
             <a href="/admin.html" class="admin-sidebar-link">Dashboard</a>
             <a href="/admin-users.html" class="admin-sidebar-link">User management</a>
+
             <details class="admin-sidebar-details">
                 <summary class="admin-sidebar-summary">Resource management</summary>
+
                 <div class="admin-sidebar-dropdown-panel">
                     <a href="/admin-show-resource.html" class="admin-sidebar-sublink">Show resources</a>
                     <a href="/admin-add-resource.html" class="admin-sidebar-sublink">Add resource</a>
                 </div>
             </details>
+
             <a href="/admin-bookings.html" class="admin-sidebar-link">Booking management</a>
             <a href="/admin-contact.html" class="admin-sidebar-link">Contact us management</a>
         </nav>
     </aside>
+
     <div class="admin-content">
         <header class="admin-top-bar">
-            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Nexus — Home">
+            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Orbit — Home">
                 <img class="admin-brand-logo" src="/images/campus-nexus-logo.png" width="36" height="36" alt="" decoding="async">
-                <span class="admin-top-bar-brand">Campus Nexus — Admin</span>
+                <span class="admin-top-bar-brand">Campus Orbit — Admin</span>
             </a>
+
             <a href="/profile.html" class="admin-top-bar-link nav-cta">My Profile</a>
         </header>
+
         <main class="admin-main-scroll">
             <div class="admin-page-inner">
                 <section id="admin-bookings" class="card admin-bookings-card">
                     <h2>Booking management</h2>
-                    <p class="admin-bookings-intro">Review reservation requests. Approve or reject pending bookings. Rejections require a short reason for the requester.</p>
+
+                    <p class="admin-bookings-intro">
+                        Review reservation requests. Approve or reject pending bookings. Rejections require a short reason for the requester.
+                    </p>
+
                     <p id="bookings-status" class="admin-bookings-status"></p>
+
                     <div class="admin-bookings-toolbar">
                         <label class="admin-bookings-filter">
                             Status
@@ -71,8 +919,10 @@
                                 <option value="CANCELLED">Cancelled</option>
                             </select>
                         </label>
+
                         <button type="button" id="bookings-refresh" class="admin-bookings-refresh">Refresh</button>
                     </div>
+
                     <div class="admin-bookings-table-wrap">
                         <table class="admin-bookings-table">
                             <thead>
@@ -87,9 +937,11 @@
                                 <th>Actions</th>
                             </tr>
                             </thead>
+
                             <tbody id="bookings-table-body"></tbody>
                         </table>
                     </div>
+
                     <div class="admin-bookings-pagination" id="bookings-pagination" hidden>
                         <button type="button" id="bookings-prev" class="admin-bookings-page-btn">Previous</button>
                         <span id="bookings-page-label" class="admin-bookings-page-label"></span>
@@ -98,6 +950,7 @@
                 </section>
             </div>
         </main>
+
         <div id="site-footer"></div>
     </div>
 </div>
@@ -113,6 +966,7 @@
     const bookingsPageLabel = document.getElementById("bookings-page-label");
 
     const BOOKINGS_PAGE_SIZE = 12;
+
     let bookingsPage = 0;
     let bookingsTotalPages = 1;
     let currentAdminUser = null;
@@ -127,44 +981,61 @@
 
     function formatTime(t) {
         if (t == null) return "—";
-        if (typeof t === "string") return t.length >= 5 ? t.slice(0, 5) : t;
+
+        if (typeof t === "string") {
+            return t.length >= 5 ? t.slice(0, 5) : t;
+        }
+
         if (Array.isArray(t) && t.length >= 2) {
             const h = String(t[0]).padStart(2, "0");
             const m = String(t[1]).padStart(2, "0");
             return h + ":" + m;
         }
+
         return String(t);
     }
 
     function statusBadgeClass(status) {
         const s = (status || "").toUpperCase();
+
         if (s === "PENDING") return "admin-booking-status--pending";
         if (s === "APPROVED") return "admin-booking-status--approved";
         if (s === "REJECTED") return "admin-booking-status--rejected";
         if (s === "CANCELLED") return "admin-booking-status--cancelled";
+
         return "";
     }
 
     function buildSearchUrl(page) {
         const params = new URLSearchParams();
+
         params.set("page", String(page));
         params.set("size", String(BOOKINGS_PAGE_SIZE));
+
         const st = bookingsFilter.value;
-        if (st) params.set("status", st);
+
+        if (st) {
+            params.set("status", st);
+        }
+
         return "/api/bookings/search?" + params.toString();
     }
 
     async function loadBookings(page) {
         bookingsStatusEl.textContent = "Loading…";
         bookingsTbody.innerHTML = "";
+
         try {
             const res = await fetch(buildSearchUrl(page));
+
             if (!res.ok) {
                 const t = await res.text();
                 throw new Error(t || "Failed to load bookings");
             }
+
             const data = await res.json();
             const rows = Array.isArray(data.content) ? data.content : [];
+
             bookingsPage = typeof data.currentPage === "number" ? data.currentPage : page;
             bookingsTotalPages = Math.max(1, typeof data.totalPages === "number" ? data.totalPages : 1);
 
@@ -173,11 +1044,16 @@
             } else {
                 bookingsTbody.innerHTML = rows.map((b) => {
                     const pending = (b.status || "").toUpperCase() === "PENDING";
+
                     const actions = pending
                         ? `<button type="button" class="admin-booking-approve" data-id="${b.id}">Approve</button> ` +
-                          `<button type="button" class="admin-booking-reject" data-id="${b.id}">Reject</button>`
+                        `<button type="button" class="admin-booking-reject" data-id="${b.id}">Reject</button>`
                         : "—";
-                    const rej = b.rejectionReason ? `<div class="admin-booking-reason">${escHtml(b.rejectionReason)}</div>` : "";
+
+                    const rej = b.rejectionReason
+                        ? `<div class="admin-booking-reason">${escHtml(b.rejectionReason)}</div>`
+                        : "";
+
                     return `<tr>
                         <td>${b.id}</td>
                         <td>${escHtml(b.bookingDate)}</td>
@@ -200,29 +1076,43 @@
             bookingsTbody.querySelectorAll(".admin-booking-approve").forEach((btn) => {
                 btn.addEventListener("click", () => updateBookingStatus(Number(btn.dataset.id), "APPROVED", null));
             });
+
             bookingsTbody.querySelectorAll(".admin-booking-reject").forEach((btn) => {
                 btn.addEventListener("click", () => {
                     const reason = window.prompt("Rejection reason (required for the requester):");
+
                     if (reason == null) return;
+
                     const trimmed = reason.trim();
+
                     if (!trimmed) {
                         window.alert("A rejection reason is required.");
                         return;
                     }
+
                     updateBookingStatus(Number(btn.dataset.id), "REJECTED", trimmed);
                 });
             });
+
         } catch (e) {
             bookingsStatusEl.textContent = e.message || "Could not load bookings.";
         }
     }
 
     async function updateBookingStatus(id, status, reason) {
-        const email = currentAdminUser && currentAdminUser.email ? currentAdminUser.email : "admin@campus.com";
+        const email = currentAdminUser && currentAdminUser.email
+            ? currentAdminUser.email
+            : "admin@campus.com";
+
         bookingsStatusEl.textContent = "Updating…";
+
         try {
             const body = { status };
-            if (reason) body.reason = reason;
+
+            if (reason) {
+                body.reason = reason;
+            }
+
             const res = await fetch("/api/bookings/" + encodeURIComponent(id) + "/status", {
                 method: "PATCH",
                 headers: {
@@ -231,17 +1121,26 @@
                 },
                 body: JSON.stringify(body)
             });
+
             const raw = await res.text();
+
             if (!res.ok) {
                 let msg = raw || "Update failed";
+
                 try {
                     const j = JSON.parse(raw);
-                    if (j.message) msg = j.message;
+
+                    if (j.message) {
+                        msg = j.message;
+                    }
                 } catch (_) {}
+
                 throw new Error(msg);
             }
+
             bookingsStatusEl.textContent = "Booking updated.";
             await loadBookings(bookingsPage);
+
         } catch (e) {
             bookingsStatusEl.textContent = e.message || "Update failed.";
         }
@@ -252,24 +1151,40 @@
     if (userRaw) {
         try {
             const user = JSON.parse(userRaw);
+
             if (user.role !== "ADMIN") {
                 window.location.href = "/";
             }
+
             currentAdminUser = user;
+
             loadBookings(0);
+
             bookingsFilter.addEventListener("change", () => loadBookings(0));
             bookingsRefreshBtn.addEventListener("click", () => loadBookings(bookingsPage));
+
             bookingsPrev.addEventListener("click", () => {
-                if (bookingsPage > 0) loadBookings(bookingsPage - 1);
+                if (bookingsPage > 0) {
+                    loadBookings(bookingsPage - 1);
+                }
             });
+
             bookingsNext.addEventListener("click", () => {
-                if (bookingsPage < bookingsTotalPages - 1) loadBookings(bookingsPage + 1);
+                if (bookingsPage < bookingsTotalPages - 1) {
+                    loadBookings(bookingsPage + 1);
+                }
             });
+
         } catch (_) {
             localStorage.removeItem("smartCampusUser");
-            if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
+
+            if (
+                window.SmartCampusResourceApi &&
+                typeof window.SmartCampusResourceApi.clearCredentials === "function"
+            ) {
                 window.SmartCampusResourceApi.clearCredentials();
             }
+
             window.location.href = "/login.html";
         }
     } else {
@@ -280,10 +1195,14 @@
         .then((response) => response.ok ? response.text() : "")
         .then((footerHtml) => {
             const footerContainer = document.getElementById("site-footer");
-            if (footerContainer) footerContainer.innerHTML = footerHtml;
+
+            if (footerContainer) {
+                footerContainer.innerHTML = footerHtml;
+            }
         })
         .catch(() => {});
 </script>
+
 <script src="/nav-highlight.js"></script>
 </body>
 </html>

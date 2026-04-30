@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile | Campus Nexus</title>
+    <title>My Profile | Campus Orbit</title>
+
     <script src="/app-settings.js"></script>
     <link rel="stylesheet" href="/css/campus-nexus-theme.css">
     <link rel="stylesheet" href="/css/profile.css">
@@ -12,7 +13,522 @@
     <link rel="stylesheet" href="/css/nav-highlight.css">
     <link rel="stylesheet" href="/css/footer.css">
     <link rel="stylesheet" href="/css/notification-bell.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body.with-shared-header {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            background:
+                    radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 35%),
+                    radial-gradient(circle at bottom right, rgba(38, 70, 83, 0.24), transparent 35%),
+                    linear-gradient(135deg, #f8fbff 0%, #eef6ff 45%, #f7fbff 100%);
+            color: #1f2937;
+            overflow-x: hidden;
+        }
+
+        body.with-shared-header::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(rgba(255, 255, 255, 0.45) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.45) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none;
+            opacity: 0.45;
+            z-index: 0;
+        }
+
+        #site-header-mount {
+            position: relative;
+            z-index: 9999;
+        }
+
+        #site-footer {
+            position: relative;
+            z-index: 10;
+        }
+
+        header.top-nav,
+        .top-nav {
+            position: relative;
+            z-index: 9999;
+        }
+
+        #nav-notify-wrap {
+            position: relative !important;
+            z-index: 10000 !important;
+        }
+
+        #nav-notify-wrap .notification-panel,
+        #nav-notify-wrap .notifications-panel,
+        #nav-notify-wrap .notification-dropdown,
+        #nav-notify-wrap [class*="notification"][class*="panel"],
+        #nav-notify-wrap [class*="notification"][class*="dropdown"] {
+            position: absolute !important;
+            top: calc(100% + 12px) !important;
+            right: 0 !important;
+            width: 460px !important;
+            min-width: 460px !important;
+            max-width: calc(100vw - 32px) !important;
+            border-radius: 16px !important;
+            background: rgba(255, 255, 255, 0.96) !important;
+            border: 1px solid #dbe7ee !important;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22) !important;
+            overflow: hidden !important;
+            z-index: 10001 !important;
+            backdrop-filter: blur(16px);
+        }
+
+        #nav-notify-wrap .notification-panel *,
+        #nav-notify-wrap .notifications-panel *,
+        #nav-notify-wrap .notification-dropdown *,
+        #nav-notify-wrap [class*="notification"][class*="panel"] *,
+        #nav-notify-wrap [class*="notification"][class*="dropdown"] * {
+            box-sizing: border-box;
+        }
+
+        #nav-notify-wrap .notification-panel header,
+        #nav-notify-wrap .notifications-panel header,
+        #nav-notify-wrap .notification-dropdown header,
+        #nav-notify-wrap [class*="notification"][class*="panel"] header,
+        #nav-notify-wrap [class*="notification"][class*="dropdown"] header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 16px 18px !important;
+            background: #ffffff !important;
+            border-bottom: 1px solid #dbe7ee !important;
+            white-space: nowrap !important;
+        }
+
+        #nav-notify-wrap .notification-panel h1,
+        #nav-notify-wrap .notification-panel h2,
+        #nav-notify-wrap .notification-panel h3,
+        #nav-notify-wrap .notifications-panel h1,
+        #nav-notify-wrap .notifications-panel h2,
+        #nav-notify-wrap .notifications-panel h3,
+        #nav-notify-wrap .notification-dropdown h1,
+        #nav-notify-wrap .notification-dropdown h2,
+        #nav-notify-wrap .notification-dropdown h3,
+        #nav-notify-wrap [class*="notification"][class*="panel"] h1,
+        #nav-notify-wrap [class*="notification"][class*="panel"] h2,
+        #nav-notify-wrap [class*="notification"][class*="panel"] h3,
+        #nav-notify-wrap [class*="notification"][class*="dropdown"] h1,
+        #nav-notify-wrap [class*="notification"][class*="dropdown"] h2,
+        #nav-notify-wrap [class*="notification"][class*="dropdown"] h3 {
+            margin: 0 !important;
+            font-size: 18px !important;
+            font-weight: 900 !important;
+            color: #132238 !important;
+            letter-spacing: -0.02em !important;
+        }
+
+        #nav-notify-wrap .notification-actions,
+        #nav-notify-wrap .notifications-actions,
+        #nav-notify-wrap [class*="notification"][class*="actions"] {
+            display: flex !important;
+            justify-content: flex-end !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 12px !important;
+            background: #f8fafc !important;
+            border-top: 1px solid #dbe7ee !important;
+            flex-wrap: nowrap !important;
+        }
+
+        #nav-notify-wrap button {
+            white-space: nowrap !important;
+        }
+
+        #nav-notify-wrap .notification-actions button,
+        #nav-notify-wrap .notifications-actions button,
+        #nav-notify-wrap [class*="notification"][class*="actions"] button {
+            width: auto !important;
+            min-width: 92px !important;
+            min-height: 42px !important;
+            padding: 10px 14px !important;
+            border-radius: 10px !important;
+            border: 0 !important;
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+            font-size: 13px !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+
+        #nav-notify-wrap .notification-list,
+        #nav-notify-wrap .notifications-list,
+        #nav-notify-wrap [class*="notification"][class*="list"] {
+            max-height: 320px !important;
+            overflow-y: auto !important;
+            background: #ffffff !important;
+        }
+
+        #nav-notify-wrap .notification-empty,
+        #nav-notify-wrap .notifications-empty,
+        #nav-notify-wrap [class*="notification"][class*="empty"] {
+            padding: 26px 18px !important;
+            text-align: center !important;
+            color: #334155 !important;
+            font-size: 15px !important;
+        }
+
+        .profile-page {
+            position: relative;
+            z-index: 1;
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 120px 0 70px;
+            display: grid;
+            gap: 28px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            box-shadow:
+                    0 28px 70px rgba(15, 23, 42, 0.13),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(18px);
+        }
+
+        .profile-card {
+            padding: 42px;
+            overflow: visible;
+        }
+
+        .settings-card {
+            padding: 34px 42px;
+        }
+
+        .profile-card h2,
+        .settings-card h2 {
+            margin: 0;
+            font-size: 32px;
+            line-height: 1.1;
+            font-weight: 900;
+            letter-spacing: -0.055em;
+            color: #132238;
+        }
+
+        .subtitle {
+            margin: 12px 0 30px;
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .profile-card__body {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 38px;
+            align-items: start;
+        }
+
+        .profile-card__column--details {
+            min-width: 0;
+        }
+
+        .profile-card__column--photo {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 26px;
+        }
+
+        .profile-avatar-top {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 28px;
+            border-radius: 28px;
+            background:
+                    linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(23, 50, 77, 0.10)),
+                    rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(216, 228, 231, 0.9);
+        }
+
+        .profile-avatar-wrap {
+            position: relative;
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            padding: 8px;
+            background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+            box-shadow: 0 22px 42px rgba(59, 130, 246, 0.24);
+        }
+
+        .profile-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            background: #ffffff;
+            border: 5px solid #ffffff;
+        }
+
+        .avatar-edit-btn {
+            position: absolute;
+            right: 10px;
+            bottom: 12px;
+            width: 46px;
+            height: 46px;
+            border: 0;
+            border-radius: 50%;
+            color: #ffffff;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.25);
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.25s ease;
+        }
+
+        .avatar-edit-btn:hover {
+            transform: translateY(-2px) scale(1.04);
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .profile-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        label {
+            display: grid;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #334155;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 14px 15px;
+            border-radius: 15px;
+            border: 1px solid #dbe7f5;
+            background: rgba(255, 255, 255, 0.94);
+            color: #111827;
+            font-size: 15px;
+            outline: none;
+            transition: 0.25s ease;
+        }
+
+        input::placeholder {
+            color: #94a3b8;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+            background: #ffffff;
+        }
+
+        input:read-only,
+        input:disabled {
+            background: rgba(241, 245, 249, 0.85);
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+            align-items: center;
+        }
+
+        button,
+        .btn-secondary {
+            border: 0;
+            padding: 13px 18px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+        }
+
+        button:not(.avatar-edit-btn):not(.auth-tab),
+        #edit-profile-btn,
+        #save-profile-btn,
+        #logout-btn,
+        #save-settings-btn,
+        #backup-settings-btn {
+            color: #ffffff;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            box-shadow: 0 16px 35px rgba(59, 130, 246, 0.22);
+        }
+
+        button:not(.avatar-edit-btn):hover,
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary,
+        #restore-settings-btn {
+            color: #1e3a8a !important;
+            background: rgba(255, 255, 255, 0.86) !important;
+            border: 1px solid #dbe7f5 !important;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        #logout-btn {
+            background: linear-gradient(135deg, #334155, #0f172a);
+        }
+
+        .status-text {
+            min-height: 22px;
+            margin: 16px 0 0;
+            font-size: 14px;
+            font-weight: 800;
+            color: #3b82f6;
+        }
+
+        .settings-card .grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .settings-kbd-hint {
+            margin: -10px 0 18px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 26px;
+            padding: 4px 7px;
+            border-radius: 7px;
+            background: #eff6ff;
+            border: 1px solid #dbe7f5;
+            color: #1e3a8a;
+            font-size: 12px;
+            font-weight: 900;
+            box-shadow: inset 0 -1px 0 rgba(15, 23, 42, 0.08);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 900px) {
+            #nav-notify-wrap .notification-panel,
+            #nav-notify-wrap .notifications-panel,
+            #nav-notify-wrap .notification-dropdown,
+            #nav-notify-wrap [class*="notification"][class*="panel"],
+            #nav-notify-wrap [class*="notification"][class*="dropdown"] {
+                right: -80px !important;
+                width: 420px !important;
+                min-width: 420px !important;
+            }
+
+            .profile-card__body {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-card__column--photo {
+                order: -1;
+                padding-top: 0;
+            }
+
+            .profile-avatar-top {
+                max-width: 340px;
+                margin: 0 auto;
+            }
+
+            .settings-card .grid,
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            #nav-notify-wrap .notification-panel,
+            #nav-notify-wrap .notifications-panel,
+            #nav-notify-wrap .notification-dropdown,
+            #nav-notify-wrap [class*="notification"][class*="panel"],
+            #nav-notify-wrap [class*="notification"][class*="dropdown"] {
+                position: fixed !important;
+                top: 82px !important;
+                left: 12px !important;
+                right: 12px !important;
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+            }
+
+            #nav-notify-wrap .notification-actions,
+            #nav-notify-wrap .notifications-actions,
+            #nav-notify-wrap [class*="notification"][class*="actions"] {
+                flex-wrap: wrap !important;
+            }
+
+            #nav-notify-wrap .notification-actions button,
+            #nav-notify-wrap .notifications-actions button,
+            #nav-notify-wrap [class*="notification"][class*="actions"] button {
+                flex: 1 1 auto !important;
+            }
+
+            .profile-page {
+                width: min(100% - 24px, 1180px);
+                padding-top: 105px;
+            }
+
+            .profile-card,
+            .settings-card {
+                padding: 26px 20px;
+                border-radius: 24px;
+            }
+
+            .profile-card h2,
+            .settings-card h2 {
+                font-size: 28px;
+            }
+
+            .actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .actions button,
+            .actions a {
+                width: 100%;
+            }
+
+            .profile-avatar-wrap {
+                width: 160px;
+                height: 160px;
+            }
+        }
+    </style>
 </head>
+
 <body class="with-shared-header">
 <div id="site-header-mount"></div>
 
@@ -82,6 +598,7 @@
             <button id="restore-settings-btn" type="button" class="btn-secondary">Restore</button>
             <input id="restore-file-input" class="hidden" type="file" accept=".json,application/json">
         </div>
+
         <p id="settings-status" class="status-text"></p>
     </section>
 </main>
@@ -162,6 +679,7 @@
             syncAccountLinkFromUser(currentUser);
         }
     });
+
     const avatarEditBtn = document.getElementById("avatar-edit-btn");
     const editProfileBtn = document.getElementById("edit-profile-btn");
     const saveProfileBtn = document.getElementById("save-profile-btn");
@@ -179,11 +697,19 @@
     async function fetchProfileFromDatabase(user) {
         const uid = user.userId;
         if (uid == null || uid === 0) {
+            console.log("No valid user ID, returning local user data");
             return user;
         }
         try {
             const res = await fetch(`/api/users/${uid}`);
             if (!res.ok) {
+                if (res.status === 404) {
+                    console.warn("User not found in database");
+                } else if (res.status === 401) {
+                    console.warn("Unauthorized access to user data");
+                } else {
+                    console.warn(`API error: ${res.status} ${res.statusText}`);
+                }
                 return user;
             }
             const p = await res.json();
@@ -198,7 +724,8 @@
                 address: p.address ?? "",
                 profileImageData: p.profileImageData
             };
-        } catch (_) {
+        } catch (error) {
+            console.error("Network error fetching profile:", error);
             return user;
         }
     }
@@ -212,9 +739,16 @@
         const nameParts = (user.fullName || "").trim().split(/\s+/).filter(Boolean);
         const firstName = user.firstName || nameParts[0] || "";
         const lastName = user.lastName || nameParts.slice(1).join(" ") || "";
+        
+        // Ensure we have some data to display
+        if (!user.email && !user.fullName) {
+            profileStatus.textContent = "No user data available. Please sign in again.";
+            return;
+        }
+        
         profileDetails.innerHTML = `
                 <label>User ID
-                    <input type="text" value="${escAttr(user.userId)}" readonly>
+                    <input type="text" value="${escAttr(user.userId || 'N/A')}" readonly>
                 </label>
                 <label>First Name
                     <input id="first-name" class="editable-field" type="text" value="${escAttr(firstName)}" disabled>
@@ -223,7 +757,7 @@
                     <input id="last-name" class="editable-field" type="text" value="${escAttr(lastName)}" disabled>
                 </label>
                 <label>Email
-                    <input type="text" value="${escAttr(user.email)}" readonly>
+                    <input type="text" value="${escAttr(user.email || 'N/A')}" readonly>
                 </label>
                 <label>Contact Number
                     <input id="contact-number" class="editable-field" type="tel" value="${escAttr(user.contactNumber)}" placeholder="+94 77 123 4567" disabled>
@@ -259,7 +793,7 @@
                 currentUser = { ...currentUser, profileImageData: imageData };
                 localStorage.setItem("smartCampusUser", JSON.stringify(currentUser));
                 syncAccountLinkFromUser(currentUser);
-                profileStatus.textContent = "Image ready — click Update Profile to save to the database.";
+                profileStatus.textContent = "Image ready - click Update Profile to save to the database.";
             };
             reader.readAsDataURL(file);
         };
@@ -276,30 +810,77 @@
         editProfileBtn.classList.toggle("hidden", enabled);
     }
 
+    // Check server connectivity first
+    async function checkServerConnectivity() {
+        try {
+            const response = await fetch('/api/auth/status', { 
+                method: 'GET',
+                timeout: 5000 
+            });
+            return response.status !== 0; // Any response means server is reachable
+        } catch (error) {
+            return false;
+        }
+    }
+
     const userRaw = localStorage.getItem("smartCampusUser");
     if (!userRaw) {
-        profileStatus.textContent = "You are not signed in.";
+        profileStatus.textContent = "You are not signed in. Please log in to view your profile.";
         avatarEditBtn.disabled = true;
         editProfileBtn.disabled = true;
         saveProfileBtn.disabled = true;
+        // Add login button
+        const loginBtn = document.createElement("button");
+        loginBtn.textContent = "Sign In";
+        loginBtn.className = "btn-secondary";
+        loginBtn.onclick = () => window.location.href = "/login.html";
+        editProfileBtn.parentNode.insertBefore(loginBtn, editProfileBtn);
     } else {
         (async () => {
             try {
+                // Check server connectivity first
+                const isServerReachable = await checkServerConnectivity();
+                if (!isServerReachable) {
+                    profileStatus.textContent = "Cannot connect to server. Please check your internet connection and try again.";
+                    // Still try to show local data
+                    let user = JSON.parse(userRaw);
+                    if (user && user.email) {
+                        renderProfileUi(user);
+                        profileStatus.textContent += " Showing cached profile data.";
+                    }
+                    return;
+                }
+
                 let user = JSON.parse(userRaw);
+                if (!user || !user.email) {
+                    throw new Error("Invalid user data");
+                }
+                
+                // Show loading state
+                profileStatus.textContent = "Loading your profile...";
+                
                 user = await fetchProfileFromDatabase(user);
                 currentUser = user;
                 localStorage.setItem("smartCampusUser", JSON.stringify(user));
                 renderProfileUi(user);
-                profileStatus.textContent = "Profile loaded from database.";
-            } catch (_) {
+                profileStatus.textContent = "Profile loaded successfully.";
+            } catch (error) {
+                console.error("Profile loading error:", error);
                 localStorage.removeItem("smartCampusUser");
                 if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
                     window.SmartCampusResourceApi.clearCredentials();
                 }
-                profileStatus.textContent = "Session invalid. Please sign in again.";
+                profileStatus.textContent = "Session expired. Please sign in again.";
                 avatarEditBtn.disabled = true;
                 editProfileBtn.disabled = true;
                 saveProfileBtn.disabled = true;
+                
+                // Add login button
+                const loginBtn = document.createElement("button");
+                loginBtn.textContent = "Sign In Again";
+                loginBtn.className = "btn-secondary";
+                loginBtn.onclick = () => window.location.href = "/login.html";
+                editProfileBtn.parentNode.insertBefore(loginBtn, editProfileBtn);
             }
         })();
     }
@@ -456,7 +1037,7 @@
         const downloadUrl = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = downloadUrl;
-        anchor.download = "campus-nexus-backup.json";
+        anchor.download = "campus-orbit-backup.json";
         anchor.click();
         URL.revokeObjectURL(downloadUrl);
         settingsStatus.textContent = "Backup downloaded successfully.";
@@ -507,9 +1088,11 @@
         })
         .catch(() => {});
 </script>
+
 <script src="/js/header-loader.js"></script>
+
 <script>
- (function loadProfileNotificationBell() {
+    (function loadProfileNotificationBell() {
         function appendBell() {
             var s = document.createElement("script");
             s.src = "/js/notification-bell.js";
@@ -529,6 +1112,7 @@
         }
     })();
 </script>
+
 <script src="/nav-highlight.js"></script>
 </body>
 </html>

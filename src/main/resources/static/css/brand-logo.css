@@ -23,7 +23,7 @@ a.admin-top-bar-brand-wrap:hover {
 a.brand:focus-visible,
 a.auth-brand-bar:focus-visible,
 a.admin-top-bar-brand-wrap:focus-visible {
-  outline: 2px solid var(--gold2, #f0c96d);
+  outline: 2px solid var(--gold2, #60a5fa);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -67,7 +67,7 @@ a.admin-top-bar-brand-wrap:focus-visible {
   font-family: var(--ff-display, "Playfair Display", Georgia, serif);
   font-weight: 700;
   font-size: 1.25rem;
-  color: var(--gold2, #f0c96d);
+  color: var(--gold2, #60a5fa);
 }
 
 .auth-brand-bar .brand-logo {
