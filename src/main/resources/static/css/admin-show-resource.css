@@ -4,12 +4,12 @@
     font-family: var(--ff-display);
     font-size: clamp(1.5rem, 2.5vw, 1.85rem);
     font-weight: 700;
-    color: var(--cream);
+    color: var(--blue);
     margin: 0 0 8px;
 }
 
 .admin-show-resource-page .resource-browse-intro {
-    color: var(--muted);
+    color: var(--gray);
     font-size: 14px;
     line-height: 1.55;
     margin: 0 0 22px;
@@ -17,117 +17,135 @@
 }
 
 .admin-show-resource-page .resource-browse-intro strong {
-    color: var(--gold2);
+    color: var(--blue3);
 }
 
 .admin-show-resource-page .admin-page-inner > .card {
-    background: var(--navy2);
+    background: var(--white);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 20px;
+    padding: 24px;
     box-shadow: 0 8px 20px var(--shadow);
-    margin-bottom: 24px;
+    margin-bottom: 32px;
+    transition: box-shadow 0.3s ease;
+}
+
+.admin-show-resource-page .admin-page-inner > .card:hover {
+    box-shadow: 0 12px 28px var(--shadow);
 }
 
 .admin-show-resource-page .admin-page-inner > .card h2 {
     font-family: var(--ff-display);
     font-size: 1.35rem;
     font-weight: 600;
-    color: var(--cream);
-    margin-bottom: 16px;
+    color: var(--blue);
+    margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border);
 }
 
 .admin-show-resource-page .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 8px;
 }
 
 .admin-show-resource-page .grid label {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--muted);
+    color: var(--gray);
 }
 
 .admin-show-resource-page .grid input,
 .admin-show-resource-page .grid select {
-    padding: 10px 12px;
+    padding: 12px 14px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: var(--navy3);
-    color: var(--white);
+    background: var(--white);
+    color: var(--blue);
     font-size: 14px;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .admin-show-resource-page .grid input:focus,
 .admin-show-resource-page .grid select:focus {
     outline: none;
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px var(--glow);
+    border-color: var(--blue3);
+    box-shadow: 0 0 0 3px var(--glow), 0 2px 8px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
 }
 
 .admin-show-resource-page .card .actions {
-    margin-top: 18px;
+    margin-top: 24px;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
 }
 
 .admin-show-resource-page .card .actions button {
     margin: 0;
-    padding: 10px 18px;
+    padding: 12px 20px;
     border-radius: 10px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
     border: 1px solid transparent;
-    background: linear-gradient(135deg, var(--gold), #a87c2a);
-    color: var(--navy);
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    color: var(--white);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
 .admin-show-resource-page .card .actions button:hover {
     filter: brightness(1.06);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .admin-show-resource-page .card .actions button.secondary {
-    background: var(--navy3);
-    color: var(--white);
+    background: var(--white);
+    color: var(--blue);
     border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .admin-show-resource-page .card .actions button.secondary:hover {
-    border-color: rgba(201, 168, 76, 0.45);
-    color: var(--gold2);
+    border-color: rgba(59, 130, 246, 0.45);
+    color: var(--blue3);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .admin-show-resource-page #status-text {
     margin-bottom: 12px;
     font-size: 14px;
-    color: var(--muted);
+    color: var(--gray);
     min-height: 1.3em;
 }
 
 .admin-show-resource-page #status-text:not(:empty) {
     padding: 8px 12px;
     border-radius: 8px;
-    background: rgba(201, 168, 76, 0.06);
-    border: 1px solid rgba(201, 168, 76, 0.12);
+    background: rgba(59, 130, 246, 0.06);
+    border: 1px solid rgba(59, 130, 246, 0.12);
 }
 
 .admin-show-resource-page .admin-show-resource-table-wrap {
     overflow-x: auto;
-    margin-top: 4px;
+    margin-top: 16px;
     border-radius: 12px;
     border: 1px solid var(--border);
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--white);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .admin-show-resource-page table.admin-show-resource-table {
@@ -136,27 +154,33 @@
 }
 
 .admin-show-resource-page table.admin-show-resource-table thead th {
-    padding: 12px 12px;
-    font-size: 11px;
+    padding: 14px 16px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--gold);
-    background: var(--navy3);
-    border-bottom: 1px solid var(--border);
+    color: #ffffff;
+    background: #3b82f6;
+    border-bottom: 2px solid #2563eb;
     text-align: left;
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .admin-show-resource-page table.admin-show-resource-table tbody td {
-    padding: 11px 12px;
-    border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
     font-size: 14px;
     vertical-align: middle;
+    line-height: 1.5;
 }
 
 .admin-show-resource-page table.admin-show-resource-table tbody tr:hover {
-    background: rgba(201, 168, 76, 0.06);
+    background: rgba(59, 130, 246, 0.04);
+    transform: scale(1.001);
+    transition: all 0.2s ease;
 }
 
 .admin-show-resource-page table.admin-show-resource-table tbody tr:last-child td {
@@ -174,8 +198,8 @@
 
 .admin-show-resource-page .edit-btn {
     border: 1px solid transparent;
-    background: linear-gradient(135deg, var(--gold), #a87c2a);
-    color: var(--navy);
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    color: var(--white);
     font-weight: 600;
 }
 
@@ -184,19 +208,178 @@
 }
 
 .admin-show-resource-page .delete-btn.secondary {
-    background: var(--navy3);
-    color: var(--white);
+    background: var(--white);
+    color: var(--blue);
     border: 1px solid var(--border);
     font-weight: 600;
 }
 
 .admin-show-resource-page .delete-btn.secondary:hover {
-    border-color: rgba(201, 168, 76, 0.45);
-    color: var(--gold2);
+    border-color: rgba(59, 130, 246, 0.45);
+    color: var(--blue3);
+}
+
+@media (max-width: 900px) {
+    .admin-show-resource-page .admin-page-inner > .card {
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .admin-show-resource-page .grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-show-resource-page .admin-page-inner > .card {
+        padding: 18px;
+        margin-bottom: 20px;
+    }
+
+    .admin-show-resource-page .grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .admin-show-resource-page .grid input,
+    .admin-show-resource-page .grid select {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .admin-show-resource-page .card .actions {
+        margin-top: 20px;
+        gap: 10px;
+        padding-top: 14px;
+    }
+
+    .admin-show-resource-page .card .actions button {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .admin-show-resource-page .admin-show-resource-table-wrap {
+        margin-top: 12px;
+    }
+
+    .admin-show-resource-page table.admin-show-resource-table thead th {
+        padding: 12px 14px;
+        font-size: 11px;
+    }
+
+    .admin-show-resource-page table.admin-show-resource-table tbody td {
+        padding: 12px 14px;
+        font-size: 13px;
+    }
 }
 
 @media (max-width: 640px) {
+    .admin-show-resource-page .admin-page-inner > .card {
+        padding: 16px;
+        margin-bottom: 18px;
+    }
+
     .admin-show-resource-page .grid {
         grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .admin-show-resource-page .grid input,
+    .admin-show-resource-page .grid select {
+        padding: 12px 14px;
+        font-size: 15px;
+    }
+
+    .admin-show-resource-page .card .actions {
+        margin-top: 18px;
+        gap: 8px;
+        padding-top: 12px;
+    }
+
+    .admin-show-resource-page .card .actions button {
+        padding: 12px 16px;
+        font-size: 14px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .admin-show-resource-page table.admin-show-resource-table thead th {
+        padding: 10px 12px;
+        font-size: 10px;
+    }
+
+    .admin-show-resource-page table.admin-show-resource-table tbody td {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .admin-show-resource-page .edit-btn,
+    .admin-show-resource-page .delete-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+        margin: 1px 2px 1px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-show-resource-page .admin-page-inner > .card {
+        padding: 14px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+    }
+
+    .admin-show-resource-page .admin-page-inner > .card h2 {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+    }
+
+    .admin-show-resource-page .grid label {
+        font-size: 11px;
+        gap: 6px;
+    }
+
+    .admin-show-resource-page .grid input,
+    .admin-show-resource-page .grid select {
+        padding: 11px 12px;
+        font-size: 14px;
+    }
+
+    .admin-show-resource-page .card .actions {
+        margin-top: 16px;
+        gap: 6px;
+        padding-top: 10px;
+        flex-direction: column;
+    }
+
+    .admin-show-resource-page .card .actions button {
+        padding: 10px 14px;
+        font-size: 13px;
+        width: 100%;
+    }
+
+    .admin-show-resource-page .admin-show-resource-table-wrap {
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .admin-show-resource-page table.admin-show-resource-table thead th {
+        padding: 8px 10px;
+        font-size: 9px;
+        letter-spacing: 0.04em;
+    }
+
+    .admin-show-resource-page table.admin-show-resource-table tbody td {
+        padding: 8px 10px;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+    .admin-show-resource-page .edit-btn,
+    .admin-show-resource-page .delete-btn {
+        padding: 3px 6px;
+        font-size: 10px;
+        margin: 0 2px 0 0;
+        border-radius: 4px;
     }
 }

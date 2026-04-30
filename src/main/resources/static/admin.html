@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Campus Nexus</title>
+    <title>Admin Dashboard | Campus Orbit</title>
+
     <script src="/app-settings.js"></script>
     <link rel="stylesheet" href="/css/campus-nexus-theme.css">
     <link rel="stylesheet" href="/css/resource.css">
@@ -11,14 +12,506 @@
     <link rel="stylesheet" href="/css/brand-logo.css">
     <link rel="stylesheet" href="/css/nav-highlight.css">
     <link rel="stylesheet" href="/css/footer.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --admin-blue: #1e3a8a;
+            --admin-teal: #3b82f6;
+            --admin-teal-dark: #1d4ed8;
+            --admin-text: #132238;
+            --admin-muted: #64748b;
+            --admin-border: #dbe7ee;
+            --admin-soft: #f8fafc;
+            --admin-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+            --admin-radius: 26px;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--admin-text);
+            background:
+                    radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 34%),
+                    radial-gradient(circle at bottom right, rgba(23, 50, 77, 0.18), transparent 34%),
+                    linear-gradient(135deg, #f8fbff 0%, #eef6ff 45%, #f7fbff 100%);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(rgba(255, 255, 255, 0.44) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.44) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none;
+            opacity: 0.42;
+            z-index: 0;
+        }
+
+        .admin-app {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 285px minmax(0, 1fr);
+        }
+
+        .admin-sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 24px 18px;
+            background: rgba(255, 255, 255, 0.82);
+            border-right: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 18px 0 50px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(18px);
+        }
+
+        .admin-sidebar-title {
+            margin: 0 0 22px;
+            padding: 14px 16px;
+            border-radius: 20px;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-blue), var(--admin-teal));
+            font-size: 14px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            box-shadow: 0 16px 34px rgba(59, 130, 246, 0.22);
+        }
+
+        .admin-sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .admin-sidebar-link,
+        .admin-sidebar-summary,
+        .admin-sidebar-sublink {
+            min-height: 46px;
+            display: flex;
+            align-items: center;
+            border-radius: 16px;
+            padding: 12px 15px;
+            color: #334155;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid transparent;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.22s ease;
+        }
+
+        .admin-sidebar-link:hover,
+        .admin-sidebar-summary:hover,
+        .admin-sidebar-sublink:hover {
+            color: var(--admin-blue);
+            background: rgba(59, 130, 246, 0.11);
+            border-color: rgba(59, 130, 246, 0.20);
+            transform: translateX(3px);
+        }
+
+        .admin-sidebar-link[href="/admin.html"] {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-blue), var(--admin-teal));
+            box-shadow: 0 14px 28px rgba(59, 130, 246, 0.20);
+        }
+
+        .admin-sidebar-details {
+            border-radius: 18px;
+        }
+
+        .admin-sidebar-details summary {
+            list-style: none;
+        }
+
+        .admin-sidebar-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .admin-sidebar-summary {
+            justify-content: space-between;
+        }
+
+        .admin-sidebar-summary::after {
+            content: "⌄";
+            color: var(--admin-teal);
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .admin-sidebar-details[open] .admin-sidebar-summary::after {
+            content: "⌃";
+        }
+
+        .admin-sidebar-dropdown-panel {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 18px;
+            background: rgba(238, 246, 245, 0.76);
+            border: 1px solid rgba(216, 228, 231, 0.95);
+        }
+
+        .admin-sidebar-sublink {
+            min-height: 40px;
+            padding-left: 22px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.72);
+        }
+
+        .admin-content {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 18px 34px;
+            background: rgba(255, 255, 255, 0.80);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(18px);
+        }
+
+        .admin-top-bar-brand-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .admin-brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            object-fit: contain;
+        }
+
+        .admin-top-bar-brand {
+            color: var(--admin-blue);
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+        }
+
+        .admin-top-bar-link {
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border-radius: 16px;
+            color: var(--admin-blue);
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 900;
+            transition: 0.22s ease;
+        }
+
+        .admin-top-bar-link:hover {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-blue), var(--admin-teal));
+            transform: translateY(-2px);
+            box-shadow: 0 16px 34px rgba(59, 130, 246, 0.22);
+        }
+
+        .admin-main-scroll {
+            flex: 1;
+            padding: 34px;
+        }
+
+        .admin-page-inner {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 26px;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 42px;
+            border-radius: 32px;
+            background:
+                    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(238, 246, 245, 0.88)),
+                    radial-gradient(circle at top right, rgba(59, 130, 246, 0.20), transparent 35%);
+            border: 1px solid rgba(255, 255, 255, 0.94);
+            box-shadow: var(--admin-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            right: -60px;
+            top: -60px;
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.10);
+        }
+
+        .eyebrow {
+            position: relative;
+            z-index: 1;
+            width: fit-content;
+            margin: 0 0 14px;
+            padding: 9px 15px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--admin-teal-dark);
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+        }
+
+        .hero h1 {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            color: var(--admin-text);
+            font-size: 44px;
+            line-height: 1.05;
+            font-weight: 950;
+            letter-spacing: -0.06em;
+        }
+
+        .subtitle {
+            position: relative;
+            z-index: 1;
+            max-width: 660px;
+            margin: 14px 0 0;
+            color: var(--admin-muted);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .admin-stat-card {
+            position: relative;
+            min-height: 152px;
+            overflow: hidden;
+            padding: 22px;
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.94);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.10);
+            backdrop-filter: blur(18px);
+            transition: 0.22s ease;
+        }
+
+        .admin-stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 54px rgba(15, 23, 42, 0.14);
+        }
+
+        .admin-stat-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto;
+            height: 5px;
+            background: linear-gradient(135deg, var(--admin-blue), var(--admin-teal));
+        }
+
+        .admin-stat-card::after {
+            content: "";
+            position: absolute;
+            right: -30px;
+            bottom: -30px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.10);
+        }
+
+        .admin-stat-label {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            color: var(--admin-muted);
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1.45;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .admin-stat-value {
+            position: relative;
+            z-index: 1;
+            margin: 18px 0 0;
+            color: var(--admin-text);
+            font-size: 40px;
+            line-height: 1;
+            font-weight: 950;
+            letter-spacing: -0.05em;
+        }
+
+        .card {
+            padding: 34px 38px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.94);
+            box-shadow: var(--admin-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .card h2 {
+            margin: 0 0 18px;
+            color: var(--admin-text);
+            font-size: 30px;
+            line-height: 1.1;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+        }
+
+        .admin-activity-list {
+            display: grid;
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .admin-activity-list li {
+            position: relative;
+            padding: 16px 18px 16px 50px;
+            border-radius: 18px;
+            background: rgba(248, 250, 252, 0.94);
+            border: 1px solid #e5eefb;
+            color: #334155;
+            font-size: 15px;
+            font-weight: 750;
+        }
+
+        .admin-activity-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 23px;
+            height: 23px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--admin-blue), var(--admin-teal));
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        #site-footer {
+            padding: 0 34px 24px;
+        }
+
+        @media (max-width: 1180px) {
+            .admin-stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 900px) {
+            .admin-app {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-sidebar {
+                position: relative;
+                height: auto;
+                padding: 20px;
+                border-right: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.9);
+            }
+
+            .admin-sidebar-nav {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .admin-top-bar {
+                padding: 16px 20px;
+            }
+
+            .admin-main-scroll {
+                padding: 24px 20px;
+            }
+
+            .admin-stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 620px) {
+            .admin-sidebar-nav,
+            .admin-stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-top-bar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .admin-top-bar-link {
+                width: 100%;
+            }
+
+            .hero,
+            .card {
+                padding: 26px 20px;
+                border-radius: 24px;
+            }
+
+            .hero h1 {
+                font-size: 34px;
+            }
+
+            .admin-stat-card {
+                min-height: 128px;
+            }
+
+            #site-footer {
+                padding: 0 20px 20px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 <div class="admin-app">
     <aside class="admin-sidebar">
         <p class="admin-sidebar-title">Management</p>
+
         <nav class="admin-sidebar-nav" aria-label="Management modules">
             <a href="/admin.html" class="admin-sidebar-link">Dashboard</a>
             <a href="/admin-users.html" class="admin-sidebar-link">User management</a>
+
             <details class="admin-sidebar-details">
                 <summary class="admin-sidebar-summary">Resource management</summary>
                 <div class="admin-sidebar-dropdown-panel">
@@ -26,24 +519,28 @@
                     <a href="/admin-add-resource.html" class="admin-sidebar-sublink">Add resource</a>
                 </div>
             </details>
+
             <a href="/admin-bookings.html" class="admin-sidebar-link">Booking management</a>
             <a href="/admin-contact.html" class="admin-sidebar-link">Contact us management</a>
         </nav>
     </aside>
+
     <div class="admin-content">
         <header class="admin-top-bar">
-            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Nexus — Home">
+            <a href="/" class="admin-top-bar-brand-wrap" aria-label="Campus Orbit — Home">
                 <img class="admin-brand-logo" src="/images/campus-nexus-logo.png" width="36" height="36" alt="" decoding="async">
-                <span class="admin-top-bar-brand">Campus Nexus — Admin</span>
+                <span class="admin-top-bar-brand">Campus Orbit — Admin</span>
             </a>
+
             <a href="/profile.html" class="admin-top-bar-link nav-cta">My Profile</a>
         </header>
+
         <main class="admin-main-scroll">
             <div class="admin-page-inner">
                 <section class="hero">
                     <p class="eyebrow">ADMIN PANEL</p>
                     <h1>Admin Dashboard</h1>
-                    <p class="subtitle">Monitor your Campus Nexus platform and access core management tools.</p>
+                    <p class="subtitle">Monitor your Campus Orbit platform and access core management tools.</p>
                 </section>
 
                 <section class="admin-stats-grid">
@@ -51,18 +548,22 @@
                         <p class="admin-stat-label">Total Resources</p>
                         <p id="total-resources" class="admin-stat-value">0</p>
                     </article>
+
                     <article class="admin-stat-card">
                         <p class="admin-stat-label">Pending booking requests</p>
                         <p id="pending-bookings" class="admin-stat-value">0</p>
                     </article>
+
                     <article class="admin-stat-card">
                         <p class="admin-stat-label">Open maintenance tickets</p>
                         <p id="open-tickets" class="admin-stat-value">0</p>
                     </article>
+
                     <article class="admin-stat-card">
                         <p class="admin-stat-label">Logged In Users</p>
                         <p class="admin-stat-value">1</p>
                     </article>
+
                     <article class="admin-stat-card">
                         <p class="admin-stat-label">System Status</p>
                         <p class="admin-stat-value">Active</p>
@@ -79,6 +580,7 @@
                 </section>
             </div>
         </main>
+
         <div id="site-footer"></div>
     </div>
 </div>
@@ -90,12 +592,15 @@
 
     async function refreshOpenTicketsCount() {
         if (!openTicketsEl) return;
+
         try {
             const res = await fetch("/api/tickets?page=0&size=1&sort=createdAt&direction=desc");
+
             if (!res.ok) {
                 openTicketsEl.textContent = "—";
                 return;
             }
+
             const data = await res.json();
             const n = typeof data.totalItems === "number" ? data.totalItems : 0;
             openTicketsEl.textContent = String(n);
@@ -107,7 +612,9 @@
     async function refreshPendingCount() {
         try {
             const res = await fetch("/api/bookings/search?status=PENDING&page=0&size=1");
+
             if (!res.ok) return;
+
             const data = await res.json();
             const n = typeof data.totalItems === "number" ? data.totalItems : 0;
             pendingBookingsEl.textContent = String(n);
@@ -121,9 +628,11 @@
     if (userRaw) {
         try {
             const user = JSON.parse(userRaw);
+
             if (user.role !== "ADMIN") {
                 window.location.href = "/";
             }
+
             fetch("/api/resources")
                 .then((response) => response.ok ? response.json() : [])
                 .then((resources) => {
@@ -132,13 +641,20 @@
                 .catch(() => {
                     totalResources.textContent = "0";
                 });
+
             refreshPendingCount();
             refreshOpenTicketsCount();
+
         } catch (_) {
             localStorage.removeItem("smartCampusUser");
-            if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
+
+            if (
+                window.SmartCampusResourceApi &&
+                typeof window.SmartCampusResourceApi.clearCredentials === "function"
+            ) {
                 window.SmartCampusResourceApi.clearCredentials();
             }
+
             window.location.href = "/login.html";
         }
     } else {
@@ -149,11 +665,14 @@
         .then((response) => response.ok ? response.text() : "")
         .then((footerHtml) => {
             const footerContainer = document.getElementById("site-footer");
-            if (footerContainer) footerContainer.innerHTML = footerHtml;
+
+            if (footerContainer) {
+                footerContainer.innerHTML = footerHtml;
+            }
         })
         .catch(() => {});
-
 </script>
+
 <script src="/nav-highlight.js"></script>
 </body>
 </html>

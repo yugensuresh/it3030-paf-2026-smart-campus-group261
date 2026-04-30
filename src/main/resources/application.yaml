@@ -1,6 +1,6 @@
 spring:
   application:
-    name: campus-nexus
+    name: campus-orbit
 
   codec:
     max-in-memory-size: 25MB
@@ -8,7 +8,7 @@ spring:
   # Database Configuration
   datasource:
     # maxAllowedPacket: raise client buffer; server must also allow large packets (see my.cnf max_allowed_packet).
-    url: jdbc:mysql://localhost:3306/campus_nexus_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&maxAllowedPacket=67108864
+    url: jdbc:mysql://localhost:3306/campus_orbit_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&maxAllowedPacket=67108864
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver

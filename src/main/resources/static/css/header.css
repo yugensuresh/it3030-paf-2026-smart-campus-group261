@@ -1,12 +1,12 @@
 /* Shared site header — load campus-nexus-theme.css, then brand-logo.css */
 
 :root {
-  --header-border: var(--border, rgba(201, 168, 76, 0.18));
-  --header-gold: var(--gold, #c9a84c);
-  --header-gold2: var(--gold2, #f0c96d);
-  --header-navy: var(--navy, #0b1120);
+  --header-border: var(--border, rgba(59, 130, 246, 0.2));
+  --header-blue: var(--blue, #1e40af);
+  --header-blue2: var(--blue2, #2563eb);
+  --header-blue3: var(--blue3, #3b82f6);
   --header-white: var(--white, #ffffff);
-  --header-muted: var(--muted, #8899aa);
+  --header-gray: var(--gray, #6b7280);
   --header-ff-display: var(--ff-display, "Playfair Display", Georgia, serif);
   --header-trans: var(--trans, 0.35s cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -21,7 +21,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.1rem 3rem;
-  background: rgba(11, 17, 32, 0.82);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--header-border);
   transition: background var(--header-trans);
@@ -31,7 +31,7 @@
   font-family: var(--header-ff-display);
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--header-gold2);
+  color: var(--header-blue3);
   letter-spacing: 0.04em;
   text-decoration: none;
 }
@@ -43,7 +43,7 @@
 }
 
 .top-nav nav > a {
-  color: var(--header-muted);
+  color: var(--header-gray);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
@@ -52,7 +52,7 @@
 }
 
 .top-nav nav > a:hover {
-  color: var(--header-white);
+  color: var(--header-blue);
 }
 
 .top-nav .nav-cta {
@@ -60,16 +60,16 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.5rem 1.3rem;
-  border: 1px solid var(--header-gold);
+  border: 1px solid var(--header-blue3);
   border-radius: 6px;
-  color: var(--header-gold) !important;
+  color: var(--header-blue3) !important;
   background: transparent;
   transition: background var(--header-trans), color var(--header-trans) !important;
 }
 
 .top-nav .nav-cta:hover {
-  background: var(--header-gold);
-  color: var(--header-navy) !important;
+  background: var(--header-blue3);
+  color: var(--header-white) !important;
 }
 
 .top-nav .nav-cta .nav-cta-avatar {
@@ -78,6 +78,32 @@
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.top-nav .nav-cta:hover .nav-cta-avatar {
+  border-color: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* General profile avatar styling for all interfaces */
+.nav-cta-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.nav-cta-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Inner pages: offset fixed header */

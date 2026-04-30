@@ -1,7 +1,7 @@
 /* Tokens: /css/campus-nexus-theme.css */
 
 footer {
-    background: #070d1a;
+    background: var(--light-gray);
     border-top: 1px solid var(--border);
     padding: 5rem 5vw 2rem;
     margin-top: 5rem;
@@ -18,12 +18,12 @@ footer {
 .footer-brand h3 {
     font-family: var(--ff-display);
     font-size: 1.4rem;
-    color: var(--gold2);
+    color: var(--blue3);
     margin-bottom: .8rem;
 }
 
 .footer-brand p {
-    color: var(--muted);
+    color: var(--gray);
     font-size: .88rem;
     line-height: 1.7;
     max-width: 280px;
@@ -35,7 +35,7 @@ footer {
     font-weight: 600;
     letter-spacing: .14em;
     text-transform: uppercase;
-    color: var(--cream);
+    color: var(--blue);
     margin-bottom: 1.2rem;
 }
 
@@ -43,13 +43,13 @@ footer {
 .footer-col li { margin-bottom: .7rem; }
 
 .footer-col a {
-    color: var(--muted);
+    color: var(--gray);
     text-decoration: none;
     font-size: .88rem;
     transition: color .35s cubic-bezier(.4,0,.2,1);
 }
 
-.footer-col a:hover { color: var(--gold); }
+.footer-col a:hover { color: var(--blue3); }
 
 .footer-bottom {
     display: flex;
@@ -59,16 +59,16 @@ footer {
     gap: 1rem;
     padding-top: 1.5rem;
     font-size: .82rem;
-    color: var(--muted);
+    color: var(--gray);
 }
 
 .footer-bottom a {
-    color: var(--muted);
+    color: var(--gray);
     text-decoration: none;
     transition: color .35s cubic-bezier(.4,0,.2,1);
 }
 
-.footer-bottom a:hover { color: var(--gold); }
+.footer-bottom a:hover { color: var(--blue3); }
 
 .status-dot {
     display: inline-flex;

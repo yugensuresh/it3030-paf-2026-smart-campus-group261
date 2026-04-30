@@ -12,24 +12,24 @@
 
 .admin-main-nav a {
     text-decoration: none;
-    color: var(--muted);
+    color: var(--gray);
     font-size: 14px;
     font-weight: 500;
 }
 
 .admin-main-nav a:hover {
-    color: var(--white);
+    color: var(--blue);
 }
 
 .admin-main-nav .nav-current {
     font-size: 14px;
     font-weight: 600;
-    color: var(--gold2);
+    color: var(--blue3);
 }
 
 .btn-link {
-    background: linear-gradient(135deg, var(--gold), #a87c2a);
-    color: var(--navy) !important;
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    color: var(--white) !important;
     padding: 8px 14px;
     border-radius: 8px;
     display: inline-flex;
@@ -93,12 +93,12 @@ h1 {
 .category-pick:hover {
     filter: none;
     border-color: var(--gold);
-    box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.25);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
 }
 
 .category-pick.is-active {
     border-color: var(--gold2);
-    background: linear-gradient(145deg, rgba(201, 168, 76, 0.15), var(--navy3));
+    background: linear-gradient(145deg, rgba(37, 99, 235, 0.15), var(--navy3));
     box-shadow: 0 0 0 1px var(--gold);
 }
 
@@ -151,7 +151,7 @@ select {
 }
 
 button {
-    background: linear-gradient(135deg, var(--gold), #a87c2a);
+    background: linear-gradient(135deg, var(--gold), #1d4ed8);
     color: var(--navy);
     border: none;
     padding: 10px 14px;
@@ -682,7 +682,7 @@ a.resource-book-btn {
     font-size: 13px;
     font-weight: 600;
     text-decoration: none;
-    background: linear-gradient(135deg, var(--gold), #a87c2a);
+    background: linear-gradient(135deg, var(--gold), #1d4ed8);
     color: var(--navy) !important;
     border: none;
     transition: filter 0.15s;
@@ -706,7 +706,7 @@ a.resource-back-link {
 }
 
 a.resource-back-link:hover {
-    border-color: rgba(201, 168, 76, 0.45);
+    border-color: rgba(37, 99, 235, 0.45);
     color: var(--gold2) !important;
 }
 

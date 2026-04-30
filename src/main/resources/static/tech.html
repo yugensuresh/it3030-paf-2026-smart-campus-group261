@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Technician Tickets | Campus Nexus</title>
+    <title>Technician Tickets | Campus Orbit</title>
+
     <script src="/app-settings.js"></script>
     <link rel="stylesheet" href="/css/campus-nexus-theme.css">
     <link rel="stylesheet" href="/css/resource.css">
@@ -12,78 +13,545 @@
     <link rel="stylesheet" href="/css/header.css">
     <link rel="stylesheet" href="/css/nav-highlight.css">
     <link rel="stylesheet" href="/css/footer.css">
+
     <style>
-        /* Layout: .container from /css/resource.css */
-        .card { background: var(--navy2); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        button, textarea {
-            font: inherit;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            background: #0f172a;
-            color: var(--cream);
-            padding: 8px 10px;
+        * {
+            box-sizing: border-box;
         }
-        button { cursor: pointer; }
-        button:disabled { opacity: 0.45; cursor: not-allowed; }
-        .status { color: var(--muted); margin: 10px 0; }
-        .err { color: #ff9b9b; }
-        .ok { color: #7dd3a2; }
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1120px; }
-        th, td { border-bottom: 1px solid var(--border); text-align: left; padding: 10px; vertical-align: top; }
-        .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-        .notes { width: 220px; min-height: 64px; }
-        .tech-photos { min-width: 140px; max-width: 220px; }
-        .tech-photos-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+
+        body.with-shared-header.page-tech {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            background:
+                    radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 35%),
+                    radial-gradient(circle at bottom right, rgba(38, 70, 83, 0.24), transparent 35%),
+                    linear-gradient(135deg, #f8fbff 0%, #eef6ff 45%, #f7fbff 100%);
+            color: #1f2937;
+            overflow-x: hidden;
+        }
+
+        body.with-shared-header.page-tech::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                    linear-gradient(rgba(255, 255, 255, 0.45) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.45) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none;
+            opacity: 0.45;
+            z-index: 0;
+        }
+
+        #site-header-mount,
+        #site-footer {
+            position: relative;
+            z-index: 10;
+        }
+
+        main.container {
+            position: relative;
+            z-index: 1;
+            width: min(1240px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 120px 0 70px;
+        }
+
+        .page-shell {
+            background: rgba(255, 255, 255, 0.90);
+            border: 1px solid rgba(255, 255, 255, 0.92);
+            border-radius: 32px;
+            padding: 38px;
+            box-shadow:
+                    0 28px 70px rgba(15, 23, 42, 0.13),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(18px);
+            animation: floatIn 0.55s ease both;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .page-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .page-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 34px;
+            line-height: 1.1;
+            font-weight: 900;
+            letter-spacing: -0.055em;
+            color: #132238;
+        }
+
+        .page-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .page-status {
+            min-height: 22px;
+            margin: 12px 0 26px;
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .page-status.ok {
+            color: #3b82f6;
+        }
+
+        .page-status.err {
+            color: #ef4444;
+        }
+
+        button,
+        textarea {
+            font: inherit;
+        }
+
+        .btn-primary {
+            border: 0;
+            padding: 13px 18px;
+            border-radius: 16px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 16px 35px rgba(59, 130, 246, 0.22);
+            transition: 0.25s ease;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 42px rgba(59, 130, 246, 0.30);
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .ticket-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 22px;
+        }
+
+        .ticket-card {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid #dbe7ee;
+            border-radius: 24px;
+            padding: 22px;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+        }
+
+        .ticket-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .ticket-id {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ticket-id small {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .ticket-id strong {
+            color: #132238;
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .ticket-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .badge-status {
+            background: rgba(23, 50, 77, 0.10);
+            color: #1e3a8a;
+        }
+
+        .badge-priority {
+            background: rgba(59, 130, 246, 0.14);
+            color: #1d4ed8;
+        }
+
+        .ticket-info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .info-block {
+            padding: 14px 15px;
+            border-radius: 16px;
+            background: rgba(248, 250, 252, 0.92);
+            border: 1px solid #e5eefb;
+        }
+
+        .info-label {
+            margin-bottom: 6px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-value {
+            color: #334155;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .description-box,
+        .notes-box,
+        .photos-box {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 20px;
+            background: rgba(248, 250, 252, 0.92);
+            border: 1px solid #e5eefb;
+        }
+
+        .section-title {
+            margin: 0 0 12px;
+            color: #132238;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .description-text {
+            color: #334155;
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 0;
+            word-break: break-word;
+        }
+
+        .tech-photos-inner {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
         .tech-thumb-wrap {
             display: block;
-            border-radius: 8px;
+            border-radius: 14px;
             overflow: hidden;
-            border: 1px solid var(--border);
+            border: 1px solid #dbe7ee;
+            background: #ffffff;
             line-height: 0;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+            transition: 0.25s ease;
         }
+
+        .tech-thumb-wrap:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 24px rgba(15, 23, 42, 0.12);
+        }
+
         .tech-ticket-thumb {
             display: block;
-            width: 72px;
-            height: 72px;
+            width: 88px;
+            height: 88px;
             object-fit: cover;
-            vertical-align: top;
         }
-        .tech-photos-none { color: var(--muted); font-size: 13px; }
+
+        .tech-photos-none {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .notes {
+            width: 100%;
+            min-height: 110px;
+            resize: vertical;
+            border-radius: 16px;
+            border: 1px solid #dbe7f5;
+            background: rgba(255, 255, 255, 0.95);
+            color: #111827;
+            padding: 14px 15px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.25s ease;
+        }
+
+        .notes::placeholder {
+            color: #94a3b8;
+        }
+
+        .notes:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+            background: #ffffff;
+        }
+
+        .ticket-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .ticket-actions button {
+            border: 0;
+            padding: 12px 16px;
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.25s ease;
+        }
+
+        .ticket-actions button[data-action="progress"] {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+        }
+
+        .ticket-actions button[data-action="resolved"] {
+            background: linear-gradient(135deg, #059669, #3b82f6);
+        }
+
+        .ticket-actions button[data-action="notes"] {
+            background: linear-gradient(135deg, #1e3a8a, #334155);
+        }
+
+        .ticket-actions button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.76);
+            border: 1px dashed #c7d7ee;
+            color: #64748b;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 800;
+            padding: 20px;
+        }
+
+        [data-theme="dark"] body.with-shared-header.page-tech,
+        [data-theme="dark"] .page-tech {
+            background:
+                    radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 35%),
+                    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 35%),
+                    linear-gradient(135deg, #0f172a 0%, #111827 45%, #0f172a 100%);
+        }
+
+        [data-theme="dark"] .page-shell,
+        [data-theme="dark"] .ticket-card {
+            background: rgba(30, 41, 59, 0.92);
+            border-color: rgba(59, 130, 246, 0.18);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
+        }
+
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .ticket-id strong {
+            color: #f8fafc;
+        }
+
+        [data-theme="dark"] .page-status {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .page-status.ok {
+            color: #34d399;
+        }
+
+        [data-theme="dark"] .info-block,
+        [data-theme="dark"] .description-box,
+        [data-theme="dark"] .notes-box,
+        [data-theme="dark"] .photos-box {
+            background: rgba(15, 23, 42, 0.54);
+            border-color: rgba(59, 130, 246, 0.14);
+        }
+
+        [data-theme="dark"] .info-label,
+        [data-theme="dark"] .ticket-id small {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .info-value,
+        [data-theme="dark"] .description-text {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .badge-status {
+            background: rgba(147, 197, 253, 0.16);
+            color: #bfdbfe;
+        }
+
+        [data-theme="dark"] .badge-priority {
+            background: rgba(52, 211, 153, 0.16);
+            color: #6ee7b7;
+        }
+
+        [data-theme="dark"] .notes {
+            background: #1e293b;
+            color: #f1f5f9;
+            border-color: rgba(59, 130, 246, 0.28);
+        }
+
+        [data-theme="dark"] .tech-thumb-wrap {
+            background: #1e293b;
+            border-color: rgba(59, 130, 246, 0.18);
+        }
+
+        [data-theme="dark"] .tech-photos-none {
+            background: #334155;
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .empty-state {
+            background: rgba(15, 23, 42, 0.56);
+            border-color: rgba(59, 130, 246, 0.18);
+            color: #94a3b8;
+        }
+
+        @media (max-width: 1024px) {
+            .ticket-info-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            main.container {
+                width: min(100% - 24px, 1240px);
+                padding-top: 105px;
+            }
+
+            .page-shell {
+                padding: 26px 20px;
+                border-radius: 24px;
+            }
+
+            .page-title {
+                font-size: 29px;
+            }
+
+            .page-topbar {
+                align-items: stretch;
+            }
+
+            #refresh-btn {
+                width: 100%;
+            }
+
+            .ticket-card {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
+            .ticket-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ticket-actions {
+                flex-direction: column;
+            }
+
+            .ticket-actions button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body class="with-shared-header page-tech">
 <div id="site-header-mount"></div>
 
 <main class="container">
-    <section class="card">
-        <div class="toolbar">
-            <h1 style="margin:0;">Ticket Details</h1>
-            <button id="refresh-btn" type="button">Refresh</button>
+    <section class="page-shell">
+        <div class="page-topbar">
+            <div class="page-title-wrap">
+                <h1 class="page-title">Ticket Details</h1>
+                <span class="page-chip">Technician Dashboard</span>
+            </div>
+            <button id="refresh-btn" class="btn-primary" type="button">Refresh</button>
         </div>
-        <p id="page-status" class="status"></p>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>User</th>
-                    <th>Resource</th>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Photos</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Created</th>
-                    <th>Resolution Notes</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody id="ticket-body">
-                <tr><td colspan="11">Loading...</td></tr>
-                </tbody>
-            </table>
+
+        <p id="page-status" class="page-status"></p>
+
+        <div id="ticket-body" class="ticket-grid">
+            <div class="empty-state">Loading...</div>
         </div>
     </section>
 </main>
@@ -131,7 +599,7 @@
 
     function setStatus(msg, kind) {
         pageStatus.textContent = msg || "";
-        pageStatus.className = "status" + (kind ? " " + kind : "");
+        pageStatus.className = "page-status" + (kind ? " " + kind : "");
     }
 
     function authHeaders() {
@@ -157,7 +625,6 @@
             .replace(/'/g, "&#39;");
     }
 
-    /** For img/src and href only — do not use esc() on base64 data URLs. */
     function escAttr(s) {
         return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
     }
@@ -173,7 +640,7 @@
             );
         });
         if (!safe.length) {
-            return '<span class="tech-photos-none">—</span>';
+            return '<span class="tech-photos-none">No photos</span>';
         }
         return '<div class="tech-photos-inner">' + safe.map(function (u, i) {
             const a = escAttr(u);
@@ -183,7 +650,6 @@
         }).join("") + "</div>";
     }
 
-    /** API may send enum as string; normalize for comparisons. */
     function ticketStatus(t) {
         const s = t && t.status;
         if (s == null) return "";
@@ -200,7 +666,7 @@
     async function loadTickets() {
         if (!currentUser || !isTechnicianSession()) {
             setStatus("Technician login required.", "err");
-            tbody.innerHTML = '<tr><td colspan="11">Please login as technician (tech@gmail.com).</td></tr>';
+            tbody.innerHTML = '<div class="empty-state">Please login as technician (tech@gmail.com).</div>';
             return;
         }
 
@@ -216,15 +682,16 @@
             setStatus(`Loaded ${rows.length} ticket(s).`, "ok");
         } catch (e) {
             setStatus(e.message || "Load failed", "err");
-            tbody.innerHTML = '<tr><td colspan="11">Could not load tickets.</td></tr>';
+            tbody.innerHTML = '<div class="empty-state">Could not load tickets.</div>';
         }
     }
 
     function renderRows(rows) {
         if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="11">No tickets found.</td></tr>';
+            tbody.innerHTML = '<div class="empty-state">No tickets found.</div>';
             return;
         }
+
         tbody.innerHTML = rows.map((t) => {
             const st = ticketStatus(t);
             const terminal = st === "CLOSED" || st === "REJECTED";
@@ -232,28 +699,65 @@
             const canResolve = !terminal && st !== "RESOLVED" && (st === "OPEN" || st === "IN_PROGRESS");
             const progressAttr = canProgress ? "" : " disabled";
             const resolvedAttr = canResolve ? "" : " disabled";
+
             return `
-            <tr>
-                <td>${t.id}</td>
-                <td>${esc(t.userName || t.userEmail || "-")}</td>
-                <td>${esc(t.resourceName || "-")}</td>
-                <td>${esc(t.category || "-")}</td>
-                <td>${esc(t.description || "-")}</td>
-                <td class="tech-photos">${renderTicketPhotos(t)}</td>
-                <td>${esc(st || "-")}</td>
-                <td>${esc(t.priority || "-")}</td>
-                <td>${esc(fmtDate(t.createdAt))}</td>
-                <td>
-                    <textarea class="notes" id="notes-${t.id}" placeholder="Add resolution notes...">${esc(t.resolutionNotes || "")}</textarea>
-                </td>
-                <td>
-                    <div class="actions">
-                        <button data-action="progress" data-id="${t.id}" type="button"${progressAttr}>IN_PROGRESS</button>
-                        <button data-action="resolved" data-id="${t.id}" type="button"${resolvedAttr}>RESOLVED</button>
-                        <button data-action="notes" data-id="${t.id}" type="button">Save Notes</button>
+                <article class="ticket-card">
+                    <div class="ticket-card-top">
+                        <div class="ticket-id">
+                            <small>Ticket ID</small>
+                            <strong>#${esc(t.id)}</strong>
+                        </div>
+
+                        <div class="ticket-badges">
+                            <span class="badge badge-status">${esc(st || "-")}</span>
+                            <span class="badge badge-priority">${esc(t.priority || "-")}</span>
+                        </div>
                     </div>
-                </td>
-            </tr>`;
+
+                    <div class="ticket-info-grid">
+                        <div class="info-block">
+                            <div class="info-label">User</div>
+                            <div class="info-value">${esc(t.userName || t.userEmail || "-")}</div>
+                        </div>
+
+                        <div class="info-block">
+                            <div class="info-label">Resource</div>
+                            <div class="info-value">${esc(t.resourceName || "-")}</div>
+                        </div>
+
+                        <div class="info-block">
+                            <div class="info-label">Category</div>
+                            <div class="info-value">${esc(t.category || "-")}</div>
+                        </div>
+
+                        <div class="info-block">
+                            <div class="info-label">Created</div>
+                            <div class="info-value">${esc(fmtDate(t.createdAt))}</div>
+                        </div>
+                    </div>
+
+                    <div class="description-box">
+                        <h3 class="section-title">Description</h3>
+                        <p class="description-text">${esc(t.description || "-")}</p>
+                    </div>
+
+                    <div class="photos-box">
+                        <h3 class="section-title">Photos</h3>
+                        ${renderTicketPhotos(t)}
+                    </div>
+
+                    <div class="notes-box">
+                        <h3 class="section-title">Resolution Notes</h3>
+                        <textarea class="notes" id="notes-${t.id}" placeholder="Add resolution notes...">${esc(t.resolutionNotes || "")}</textarea>
+
+                        <div class="ticket-actions">
+                            <button data-action="progress" data-id="${t.id}" type="button"${progressAttr}>IN_PROGRESS</button>
+                            <button data-action="resolved" data-id="${t.id}" type="button"${resolvedAttr}>RESOLVED</button>
+                            <button data-action="notes" data-id="${t.id}" type="button">Save Notes</button>
+                        </div>
+                    </div>
+                </article>
+            `;
         }).join("");
     }
 
@@ -305,6 +809,7 @@
         })
         .catch(() => {});
 </script>
+
 <script src="/js/header-loader.js"></script>
 <script src="/nav-highlight.js"></script>
 </body>

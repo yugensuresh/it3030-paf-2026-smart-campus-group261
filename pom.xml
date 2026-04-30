@@ -107,8 +107,8 @@
 						<configuration>
 							<rules>
 								<requireJavaVersion>
-									<version>[17,18)</version>
-									<message>Build must run on JDK 17. Current JDK is not supported for this project.</message>
+									<version>[17,22)</version>
+									<message>Build must run on JDK 17 or higher. Current JDK is not supported for this project.</message>
 								</requireJavaVersion>
 							</rules>
 						</configuration>

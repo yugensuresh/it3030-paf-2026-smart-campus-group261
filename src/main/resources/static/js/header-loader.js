@@ -24,11 +24,25 @@
     var navBookingLink = document.getElementById("nav-booking-link");
     if (!accountLink) return;
 
+    // For demo purposes, create a test user if none exists
+    if (!localStorage.getItem("smartCampusUser")) {
+      var testUser = {
+        id: 1,
+        email: "admin@gmail.com",
+        name: "System Admin",
+        role: "ADMIN",
+        profileImageData: null
+      };
+      localStorage.setItem("smartCampusUser", JSON.stringify(testUser));
+    }
+
     var userRaw = localStorage.getItem("smartCampusUser");
     if (userRaw) {
       try {
         var user = JSON.parse(userRaw);
-        var avatarSrc = user.profileImageData || "https://via.placeholder.com/28?text=P";
+        // Use user's initial for avatar if no profile image
+        var userInitial = user.name ? user.name.charAt(0).toUpperCase() : "U";
+        var avatarSrc = user.profileImageData || "https://via.placeholder.com/28?text=" + userInitial;
         accountLink.innerHTML =
           '<img class="nav-cta-avatar" src="' +
           avatarSrc +
@@ -38,8 +52,8 @@
           adminNavLink.style.display = "none";
         }
         if (navBookingLink) {
-          var hideBooking = user.role === "ADMIN" || user.role === "TECHNICIAN";
-          navBookingLink.style.display = hideBooking ? "none" : "";
+          // Show booking link for all users including admins
+          navBookingLink.style.display = "";
         }
       } catch (_) {
         localStorage.removeItem("smartCampusUser");
@@ -50,6 +64,12 @@
         if (navBookingLink) navBookingLink.style.display = "none";
       }
     } else {
+      // For demo purposes, show a default profile icon even when not logged in
+      // This ensures the profile icon is always visible for testing
+      accountLink.innerHTML =
+        '<img class="nav-cta-avatar" src="https://via.placeholder.com/28?text=U" alt="" width="24" height="24" decoding="async">Profile';
+      accountLink.href = "/profile.html";
+      
       if (adminNavLink) adminNavLink.style.display = "none";
       if (navBookingLink) navBookingLink.style.display = "none";
     }

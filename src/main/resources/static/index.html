@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Campus Nexus</title>
+  <title>Campus Orbit</title>
   <script src="/app-settings.js"></script>
   <link rel="stylesheet" href="/css/campus-nexus-theme.css">
   <link rel="stylesheet" href="/css/brand-logo.css">
@@ -39,7 +39,6 @@
   </div>
 
   <div class="hero-right">
-    <!-- Using Unsplash source for campus imagery -->
     <img class="campus-img-main"
          src="https://images.unsplash.com/photo-1562774053-701939374585?w=800&q=80"
          alt="University campus building" loading="eager">
@@ -57,7 +56,6 @@
   </div>
 </section>
 
-<!-- ── METRICS ───────────────────────────────────────── -->
 <div class="metrics-strip fade-up">
   <div class="metric-cell">
     <div class="metric-val">99.9%</div>
@@ -77,7 +75,6 @@
   </div>
 </div>
 
-<!-- ── FEATURES ──────────────────────────────────────── -->
 <section class="section">
   <p class="section-label">Platform Highlights</p>
   <h2 class="section-title">Built for Campus Scale</h2>
@@ -92,26 +89,31 @@
       <h3>Centralized Operations</h3>
       <p>Manage resources, bookings, and administrative workflows from one unified, clean interface without jumping between systems.</p>
     </article>
+
     <article class="feature-card fade-up" style="transition-delay:.1s">
       <div class="feature-icon">🔐</div>
       <h3>Role-Based Security</h3>
       <p>JWT-secured authentication with distinct Admin and User roles. Every action is authorized, every session is protected.</p>
     </article>
+
     <article class="feature-card fade-up" style="transition-delay:.15s">
       <div class="feature-icon">⚡</div>
       <h3>Spring Boot Core</h3>
       <p>Built on the Spring Boot 3.x ecosystem with REST APIs, dependency injection, and production-ready configuration out of the box.</p>
     </article>
+
     <article class="feature-card fade-up" style="transition-delay:.2s">
       <div class="feature-icon">📊</div>
       <h3>Live Analytics</h3>
       <p>Real-time dashboards surface usage trends, resource allocation, and activity metrics to drive data-informed decisions.</p>
     </article>
+
     <article class="feature-card fade-up" style="transition-delay:.25s">
       <div class="feature-icon">🔄</div>
       <h3>Modular Architecture</h3>
       <p>Add departments, resources, or entire new modules without touching existing functionality. Scales with your institution.</p>
     </article>
+
     <article class="feature-card fade-up" style="transition-delay:.3s">
       <div class="feature-icon">👤</div>
       <h3>Profile Management</h3>
@@ -120,15 +122,15 @@
   </div>
 </section>
 
-<!-- ── SHOWCASE ───────────────────────────────────────── -->
 <section class="section modules-bg">
   <div class="showcase fade-up">
     <div class="showcase-img">
       <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80"
            alt="Team working on campus systems" loading="lazy">
     </div>
+
     <div class="showcase-content">
-      <p class="section-label">Why Campus Nexus</p>
+      <p class="section-label">Why Campus Orbit</p>
       <h2 class="section-title">Designed for Administrators</h2>
       <p class="section-sub">
         We built this with operations teams in mind — fast load times,
@@ -156,7 +158,6 @@
   </div>
 </section>
 
-<!-- ── MODULES ────────────────────────────────────────── -->
 <section class="section">
   <p class="section-label">Quick Access</p>
   <h2 class="section-title">Core Modules</h2>
@@ -171,6 +172,7 @@
       </div>
       <span class="module-arrow">→</span>
     </a>
+
     <a id="admin-dashboard-link" class="module-card" href="/admin.html">
       <div class="module-icon">⚙️</div>
       <div class="module-info">
@@ -179,6 +181,7 @@
       </div>
       <span class="module-arrow">→</span>
     </a>
+
     <a class="module-card" href="/profile.html">
       <div class="module-icon">👤</div>
       <div class="module-info">
@@ -187,6 +190,7 @@
       </div>
       <span class="module-arrow">→</span>
     </a>
+
     <a class="module-card" href="/login.html">
       <div class="module-icon">🔑</div>
       <div class="module-info">
@@ -198,7 +202,6 @@
   </div>
 </section>
 
-<!-- ── CTA ────────────────────────────────────────────── -->
 <div class="cta-banner fade-up">
   <div class="cta-text">
     <h2>Ready to modernise your campus?</h2>
@@ -212,51 +215,65 @@
 
 <div id="site-footer"></div>
 
-<!-- ── JS ─────────────────────────────────────────────── -->
 <script>
-  /* Home-only: module cards + login CTA (nav auth lives in /js/header-loader.js) */
   const adminDashboardLink = document.getElementById("admin-dashboard-link");
   const goToLoginBtn = document.getElementById("go-to-login-btn");
 
   const userRaw = localStorage.getItem("smartCampusUser");
+
   if (userRaw) {
     try {
       const user = JSON.parse(userRaw);
-      if (goToLoginBtn) goToLoginBtn.style.display = "none";
+
+      if (goToLoginBtn) {
+        goToLoginBtn.style.display = "none";
+      }
+
       if (user.role !== "ADMIN") {
-        if (adminDashboardLink) adminDashboardLink.style.display = "none";
+        if (adminDashboardLink) {
+          adminDashboardLink.style.display = "none";
+        }
       }
     } catch (_) {
       localStorage.removeItem("smartCampusUser");
-      if (window.SmartCampusResourceApi && typeof window.SmartCampusResourceApi.clearCredentials === "function") {
+
+      if (
+              window.SmartCampusResourceApi &&
+              typeof window.SmartCampusResourceApi.clearCredentials === "function"
+      ) {
         window.SmartCampusResourceApi.clearCredentials();
       }
-      if (adminDashboardLink) adminDashboardLink.style.display = "none";
+
+      if (adminDashboardLink) {
+        adminDashboardLink.style.display = "none";
+      }
     }
   } else {
-    if (adminDashboardLink) adminDashboardLink.style.display = "none";
+    if (adminDashboardLink) {
+      adminDashboardLink.style.display = "none";
+    }
   }
 
-  /* Scroll-triggered fade-in */
   const observer = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        e.target.classList.add('visible');
+        e.target.classList.add("visible");
         observer.unobserve(e.target);
       }
     });
   }, { threshold: 0.12 });
 
-  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  document.querySelectorAll(".fade-up").forEach(el => observer.observe(el));
 
   fetch("/footer.html")
-    .then((response) => response.ok ? response.text() : "")
-    .then((footerHtml) => {
-      const footerContainer = document.getElementById("site-footer");
-      if (footerContainer) footerContainer.innerHTML = footerHtml;
-    })
-    .catch(() => {});
+          .then((response) => response.ok ? response.text() : "")
+          .then((footerHtml) => {
+            const footerContainer = document.getElementById("site-footer");
+            if (footerContainer) footerContainer.innerHTML = footerHtml;
+          })
+          .catch(() => {});
 </script>
+
 <script src="/js/header-loader.js"></script>
 <script src="/js/notification-bell.js"></script>
 <script src="/nav-highlight.js"></script>
